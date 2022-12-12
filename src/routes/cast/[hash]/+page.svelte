@@ -2,8 +2,8 @@
 	import { fade } from 'svelte/transition';
 	import type { CastInterface } from '$lib/types';
 	import Cast from '$lib/components/Cast.svelte';
+	import TheCast from '$lib/components/TheCast.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { dummy } from '$lib/data';
 
 	export let data: { ancestors: CastInterface[]; children: CastInterface[] };
 	$: theCast = data.ancestors[data.ancestors.length - 1];
@@ -21,7 +21,7 @@
 		{/if}
 	{/each}
 	<!-- the cast -->
-	<Cast cast={theCast} pfpLineUp theCast />
+	<TheCast cast={theCast} pfpLineUp />
 	{#each children as child}
 		<Cast cast={child} />
 	{/each}
