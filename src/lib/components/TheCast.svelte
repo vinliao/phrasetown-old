@@ -153,7 +153,7 @@
 		: '';
 </script>
 
-<div class="bg-neutral-900 p-4 py-2 flex flex-col min-w-0 relative">
+<div class="bg-neutral-900 p-4 flex flex-col min-w-0 relative">
 	<div class="flex items-center mb-3 space-x-4">
 		<div class="h-12 w-12 flex-none {pfpLineDownClass}">
 			<a href={`/@${cast.author.username}`}>
@@ -175,7 +175,7 @@
 	</div>
 
 	<div class="min-w-0 w-full">
-		<p class="mb-3 whitespace-pre-wrap break-words">{@html cast.text}</p>
+		<p class="mb-3 whitespace-pre-wrap break-words text-lg">{@html cast.text}</p>
 
 		{#if cast.image}
 			<div>
