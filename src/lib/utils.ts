@@ -7,7 +7,7 @@ import type { Cast as SearchcasterCastInterface, Root as SearchcasterApiResponse
 import type { OpenGraph as PerlOpenGraphInterface, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraphInterface, Cast as MerkleCastInterface, Data as MerkleApiResponse } from '$lib/types/merkleUser';
 import type { Cast as MerkleNotificationInterface, Data as MerkleNotificationResponse } from '$lib/types/merkleNotification';
-import type { Root as MerkleCastRoot } from '$lib/types/merkleCast';
+import * as timeago from 'timeago.js';
 
 /**
  * an endpoint is an object which contains all the information to fetch
@@ -244,6 +244,29 @@ function linkify(text: string): string {
   return sanitizeHtml(rawHtml);
 }
 
+function makeTimeago(timestamp: number): string {
+  function enShort(number: number, index: number): [string, string] {
+    return [
+      ['just now', 'right now'],
+      ['%ss ago', 'in %ss'],
+      ['1m ago', 'in 1m'],
+      ['%sm ago', 'in %sm'],
+      ['1h ago', 'in 1h'],
+      ['%sh ago', 'in %sh'],
+      ['1d ago', 'in 1d'],
+      ['%sd ago', 'in %sd'],
+      ['1w ago', 'in 1w'],
+      ['%sw ago', 'in %sw'],
+      ['1mo ago', 'in 1mo'],
+      ['%smo ago', 'in %smo'],
+      ['1yr ago', 'in 1yr'],
+      ['%syr ago', 'in %syr']
+    ][index] as [string, string];
+  }
+  timeago.register('en-short', enShort);
+  return timeago.format(timestamp, 'en-short').replace(' ago', '');
+}
+
 /**
  * @param data api response from merkle's api endpint
  * @returns array of casts, ready to be displayed
@@ -288,7 +311,7 @@ function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInt
         hash: cast.hash,
         text: linkify(cast.text),
         image,
-        timestamp: cast.timestamp,
+        timestamp: makeTimeago(cast.timestamp),
         likes: cast.reactions.count,
         replies: cast.replies.count,
         recasts: cast.recasts.count,
@@ -348,7 +371,7 @@ function processMerkleNotification(data: MerkleNotificationInterface[], recaster
         hash: cast.hash,
         text: linkify(cast.text),
         image,
-        timestamp: cast.timestamp,
+        timestamp: makeTimeago(cast.timestamp),
         likes: cast.reactions.count,
         replies: cast.replies.count,
         recasts: cast.recasts.count,
@@ -393,7 +416,7 @@ function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[
         recasted,
         text: linkify(cast.body.data.text),
         image: cast.body.data.image,
-        timestamp: cast.body.publishedAt,
+        timestamp: makeTimeago(cast.body.publishedAt),
         likes: cast.meta.reactions.count,
         recasts: cast.meta.recasts.count,
         replies: cast.meta.numReplyChildren,
@@ -476,12 +499,10 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
       hash: cast.hash,
       text: linkify(cast.text),
       image,
-      timestamp: cast.timestamp,
+      timestamp: makeTimeago(cast.timestamp),
       likes: cast.reactions.count,
       replies: cast.replies.count,
       recasts: cast.recasts.count,
-      children: [],
-      depth: 0
     };
 
 
@@ -573,7 +594,7 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], use
       try {
         let finalUrl = endpoint.url;
         if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
-            finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
+          finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
           const response = await fetch(finalUrl);
           const data: SearchcasterApiResponse = await response.json();
 

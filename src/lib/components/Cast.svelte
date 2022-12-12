@@ -4,33 +4,8 @@
 	import ReplyRecastLike from '$lib/components/ReplyRecastLike.svelte';
 	export let cast: CastInterface;
 
-	// timestamp related
-	// todo: move this to backend
-	import * as timeago from 'timeago.js';
-	function enShort(number: number, index: number): [string, string] {
-		return [
-			['just now', 'right now'],
-			['%ss ago', 'in %ss'],
-			['1m ago', 'in 1m'],
-			['%sm ago', 'in %sm'],
-			['1h ago', 'in 1h'],
-			['%sh ago', 'in %sh'],
-			['1d ago', 'in 1d'],
-			['%sd ago', 'in %sd'],
-			['1w ago', 'in 1w'],
-			['%sw ago', 'in %sw'],
-			['1mo ago', 'in 1mo'],
-			['%smo ago', 'in %smo'],
-			['1yr ago', 'in 1yr'],
-			['%syr ago', 'in %syr']
-		][index] as [string, string];
-	}
-	timeago.register('en-short', enShort);
-	const time = timeago.format(cast.timestamp, 'en-short').replace(' ago', '');
-
 	// texbox reply
 	let replyTextbox = false;
-
 	function toggleReplyTextbox() {
 		replyTextbox = !replyTextbox;
 	}
@@ -99,7 +74,7 @@
 			<a class="hover:underline text-neutral-400" href={`/@${cast.author.username}`}
 				>@{cast.author.username}</a
 			>
-			<span class="text-neutral-400">· {time}</span>
+			<span class="text-neutral-400">· {cast.timestamp}</span>
 			{#if cast.parent}
 				<p class="text-neutral-400">
 					Replying to <a href={`/@${cast.parent.username}`}>@{cast.parent.username}</a>

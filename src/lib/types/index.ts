@@ -10,7 +10,7 @@ export interface CastInterface {
     hash: string,
   };
   hash: string,
-  timestamp: number;
+  timestamp: string;
   text: string;
   image?: string,
   likes: number,
