@@ -66,14 +66,16 @@
 >
 	<div class="rounded-2xl bg-neutral-800 p-4 flex w-96" on:click|stopPropagation>
 		<div class="w-full">
-			<p class="mb-1 text-neutral-500">Replying to @{cast.author.username}</p>
+			<p class="mb-1 text-neutral-500">@{cast.author.username} says:</p>
+			<p class="mb-4 whitespace-pre-wrap break-words text-neutral-400">{@html cast.text}</p>
+      <div class="mb-4 border-t border-neutral-700"></div>
 			<textarea
 				bind:value={replyInput}
 				use:autosize
 				autofocus
 				rows="2"
 				placeholder="Your reply..."
-				class="w-full focus:outline-none placeholder:text-neutral-500 bg-neutral-800 text-lg"
+				class="w-full focus:outline-none placeholder:text-neutral-500 bg-neutral-800 text-lg mb-3"
 				on:keydown={(e) => {
 					if (e.key == 'Enter' && e.ctrlKey) {
 						reply();
