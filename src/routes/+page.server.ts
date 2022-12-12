@@ -1,43 +1,57 @@
-import { fetchEndpoints, getFeedEndpoints, getHomeEndpoints, getUpstashName } from "$lib/utils";
+import { getUpstashName } from "$lib/utils";
 import type { PageServerLoad } from './$types';
-import { decode } from 'js-base64';
+import { decode, encode } from 'js-base64';
+import type { CastInterface, EndpointMetadataInterface } from "$lib/types";
+import { fetchEndpoints, getHomeEndpoints } from '$lib/utils';
 
-export const load: PageServerLoad = async ({ params }) => {
+async function fetchFromUpstash(): (Promise<{ casts: CastInterface[], endpoints: EndpointMetadataInterface[]; } | undefined>) {
+  try {
 
-  /**
-   * todo:
-   * if data on redis doesn't exist, curl the cache-home endpoint to fill it
-   * if data on redis exist, use it instead
-   */
+    const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
+    const upstashKey = import.meta.env.VITE_UPSTASH_KEY;
+    const { upstashColumnName } = getUpstashName();
+
+    const homeResponse = await fetch(`${upstashUrl}/get/${upstashColumnName}`, {
+      headers: {
+        Authorization: `Bearer ${upstashKey}`
+      },
+    });
+
+    const dataBase64 = await homeResponse.json();
+    const dataString = decode(dataBase64.result);
+    const data = JSON.parse(dataString);
+    return { casts: data.casts, endpoints: data.endpoints };
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+async function saveToUpstash(data: { casts: CastInterface[], endpoints: EndpointMetadataInterface[]; }) {
   const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
   const upstashKey = import.meta.env.VITE_UPSTASH_KEY;
+
+  const dataBase64 = encode(JSON.stringify(data));
+
   const { upstashColumnName, upstashEndpointName } = getUpstashName();
 
-  const homeResponse = await fetch(`${upstashUrl}/get/${upstashColumnName}`, {
+  await fetch(`${upstashUrl}/set/${upstashColumnName}`, {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${upstashKey}`
     },
+    body: dataBase64
   });
+}
 
-  const endpointResponse = await fetch(`${upstashUrl}/get/${upstashEndpointName}`, {
-    headers: {
-      Authorization: `Bearer ${upstashKey}`
-    },
-  });
-
-  const homeDataBase64 = await homeResponse.json();
-  const columnEndpointsBase64 = await endpointResponse.json();
-
-  const homeString = decode(homeDataBase64.result);
-  const columnEndpointsString = decode(columnEndpointsBase64.result);
-  const home = JSON.parse(homeString);
-  const columnEndpoints = JSON.parse(columnEndpointsString);
-
-  // this should be done as a fallback or something
-  // const { casts, endpoints } = await fetchEndpoints(getHomeEndpoints());
-
-  // return {
-  //   casts, endpoints, home
-  // };
-  return { casts: home.casts, endpoints: home.endpoints };
+export const load: PageServerLoad = async ({ params }) => {
+  const data = await fetchFromUpstash();
+  if (data) return { casts: data.casts, endpoints: data.endpoints };
+  else {
+    console.log('have to fetch manually!');
+    const endpoints = getHomeEndpoints();
+    const data = await fetchEndpoints(endpoints);
+    await saveToUpstash(data);
+    return { casts: data.casts, endpoints: data.endpoints };
+  }
 };
