@@ -27,7 +27,7 @@
 
 			showNotice.set('Cast sent successfully!');
 		} else {
-			// toggleReplyTextbox();
+			toggleReplyTextbox();
 			showNoticeError.set('Oops, something is wrong... Try again?');
 		}
 	}
