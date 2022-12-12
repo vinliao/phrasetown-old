@@ -153,7 +153,10 @@
 		: '';
 </script>
 
-<div class="bg-neutral-900 p-4 flex flex-col min-w-0 relative">
+<div class="relative px-4 pb-4 bg-neutral-900">
+	<div class={pfpLineUpClass} />
+</div>
+<div class="bg-neutral-900 p-4 pt-0 flex flex-col min-w-0 relative">
 	<div class="flex items-center mb-3 space-x-4">
 		<div class="h-12 w-12 flex-none {pfpLineDownClass}">
 			<a href={`/@${cast.author.username}`}>
