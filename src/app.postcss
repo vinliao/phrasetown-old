@@ -1,0 +1,34 @@
+/* Write your global styles here, in PostCSS syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	p > a {
+		@apply text-purple-500 hover:underline;
+	}
+
+	body {
+		@apply bg-[#0a0a0a] text-neutral-200;
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: #262626;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #737373;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #d4d4d4;
+	}
+
+	.nprogress-bar {
+		background: #f44336 !important;
+	}
+}
