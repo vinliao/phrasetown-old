@@ -4,24 +4,25 @@
 	import Cast from '$lib/components/Cast.svelte';
 	import { fade } from 'svelte/transition';
 	import { fidWritable, userHubKeyWritable, usernameWritable } from '$lib/stores';
+	import { onMount } from 'svelte';
 
 	let casts: CastInterface[] = [];
 	let endpoints: EndpointMetadataInterface[] = [];
-	$: if ($fidWritable && $usernameWritable && $userHubKeyWritable) {
-		(async () => {
-			const response = await fetch('http://localhost:5173/api/fetch-mentions', {
-				method: 'PUT',
-				body: JSON.stringify({
-					fid: $fidWritable,
-					username: $usernameWritable,
-					userHubKey: $userHubKeyWritable
-				})
-			});
-			const data = await response.json();
-			casts = data.casts;
-			endpoints = data.endpoints;
-		})();
-	}
+	onMount(() => {
+		$: if ($fidWritable && $usernameWritable && $userHubKeyWritable) {
+			(async () => {
+				const response = await fetch('http://localhost:5173/api/fetch-mentions', {
+					method: 'PUT',
+					body: JSON.stringify({
+						userHubKey: $userHubKeyWritable
+					})
+				});
+				const data = await response.json();
+				casts = data.casts;
+				endpoints = data.endpoints;
+			})();
+		}
+	});
 </script>
 
 <div in:fade={{ duration: 200 }}>

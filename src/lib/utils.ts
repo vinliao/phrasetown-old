@@ -561,7 +561,7 @@ function filterAndSortCasts(casts: CastInterface[]): CastInterface[] {
  * @param endpoints 
  * @param firstPage if true, fetch next page (with cursor or ?page=X)
  */
-export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], firstPage = false, userHubKey?: string):
+export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], userHubKey?: string):
   Promise<{ casts: CastInterface[], endpoints: EndpointMetadataInterface[]; }> {
   let casts: CastInterface[] = [];
   let endpointWithNext: EndpointMetadataInterface[] = [];
@@ -573,9 +573,7 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], fir
       try {
         let finalUrl = endpoint.url;
         if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
-          if (!firstPage) {
             finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
-          }
           const response = await fetch(finalUrl);
           const data: SearchcasterApiResponse = await response.json();
 
@@ -590,7 +588,7 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], fir
 
         }
         else if (endpoint.type == 'merkle') {
-          if (endpoint.cursor && !firstPage) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
+          if (endpoint.cursor) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
           const response = await fetch(finalUrl, {
             headers: {
               'Content-Type': 'application/json',
@@ -617,7 +615,7 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], fir
         }
 
         else if (endpoint.type == 'merkleNotification') {
-          if (endpoint.cursor && !firstPage) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
+          if (endpoint.cursor) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
           const response = await fetch(finalUrl, {
             headers: {
               'Content-Type': 'application/json',
