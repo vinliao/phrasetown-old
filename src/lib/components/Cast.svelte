@@ -1,10 +1,10 @@
 <script lang="ts">
 	// subcomponents
 	import type { CastInterface } from '$lib/types';
-	import { fly, fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
+	import ReplyTextbox from '$lib/components/ReplyTextbox.svelte';
 
 	let replyInput = '';
-	import autosize from 'autosize';
 
 	// props
 	export let cast: CastInterface;
@@ -40,53 +40,6 @@
 
 	function toggleReplyTextbox() {
 		replyTextbox = !replyTextbox;
-	}
-
-	async function fetchFid(username: string): Promise<number> {
-		const response = await fetch(`/api/get-user-by-username`, {
-			method: 'PUT',
-			body: JSON.stringify({
-				username,
-				hubKey: import.meta.env.VITE_HUB_KEY
-			})
-		});
-		return (await response.json()).fid;
-	}
-
-	async function sendCast(fid: number) {
-		const response = await fetch('/api/cast', {
-			method: 'POST',
-			body: JSON.stringify({
-				castText: replyInput,
-				replyTo: cast.hash,
-				fid,
-				userHubKey: $userHubKeyWritable
-			})
-		});
-
-		if (response.ok) {
-			toggleReplyTextbox();
-			replyInput = '';
-			cast.replies++;
-
-			showNotice.set('Cast sent successfully!');
-		} else {
-			// toggleReplyTextbox();
-			showNoticeError.set('Oops, something is wrong... Try again?');
-		}
-	}
-
-	async function reply() {
-		if (!$userHubKeyWritable) {
-			showNoticeError.set('Error: wallet not connected!');
-			toggleReplyTextbox();
-			replyInput = '';
-		} else {
-			isSending = true;
-			if (cast.author.fid) await sendCast(cast.author.fid);
-			else sendCast(await fetchFid(cast.author.username));
-			isSending = false;
-		}
 	}
 
 	let recastPulse = false;
@@ -190,7 +143,7 @@
 	{/if}
 	<div class="bg-neutral-900 p-4 pb-2 pt-0 flex space-x-4 min-w-0 relative {theCastClass}">
 		<div class="h-12 w-12 flex-none {pfpLineDownClass}">
-			<a href={`/@${cast.author.username}`} >
+			<a href={`/@${cast.author.username}`}>
 				<img
 					src={cast.author.pfp}
 					alt=""
@@ -264,46 +217,7 @@
 </a>
 
 {#if replyTextbox}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<div
-		class="w-screen h-screen fixed top-0 left-0 right-0 bottom-0 z-50 backdrop-blur-sm flex items-center justify-center backdrop-brightness-75"
-		on:click={toggleReplyTextbox}
-		transition:fade={{ duration: 200 }}
-	>
-		<div class="rounded-2xl bg-neutral-800 p-4 flex w-96" on:click|stopPropagation>
-			<div class="w-full">
-				<p class="mb-1 text-neutral-500">Replying to @{cast.author.username}</p>
-				<textarea
-					bind:value={replyInput}
-					use:autosize
-					autofocus
-					rows="2"
-					placeholder="Your reply..."
-					class="w-full focus:outline-none placeholder:text-neutral-500 bg-neutral-800 text-lg"
-					on:keydown={(e) => {
-						if (e.key == 'Enter' && e.ctrlKey) {
-							reply();
-						}
-					}}
-				/>
-				<div class="flex items-center">
-					<div class="flex-1" />
-
-					{#if !isSending}
-						<button
-							class="bg-neutral-50 hover:bg-neutral-200 transition px-3 py-1.5 rounded-lg text-neutral-800 font-mono focus:outline-none"
-							on:click={reply}>Reply</button
-						>
-					{:else}
-						<button
-							class="bg-neutral-700 px-3 py-1.5 rounded-lg text-neutral-400 font-mono focus:outline-none"
-							in:fade={{ duration: 200 }}>Reply</button
-						>
-					{/if}
-				</div>
-			</div>
-		</div>
-	</div>
+	<ReplyTextbox {cast} {toggleReplyTextbox} />
 {/if}
 
 <!-- todo: figure out a better way to do this -->
