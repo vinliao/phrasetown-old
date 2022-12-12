@@ -27,43 +27,6 @@ async function getReplies(hash: string): Promise<Root> {
   return response.json();
 }
 
-/**
- * turn data form mekrle's api (get all replies)
- * and turn them into a recursive children
- */
-// get ancestors?
-function turnIntoThread(data: Root) {
-  // recursively loop through the castPool
-  let casts = data.result.casts;
-  casts.forEach(parent => {
-    casts.forEach(cast => {
-      if (parent.hash == cast.parentHash) {
-
-      }
-    });
-  });
-  // while (castPool.length > 0) {
-  //   const cast = castPool[index];
-
-  //   if (index == castPool.length) index = 0;
-  //   index++
-  // }
-}
-
-// function getAncestors(data: Root, hash: string, threadHash: string): CastInterface[] | undefined {
-//   if (hash == threadHash) return undefined;
-
-//   let thread: Cast[] = [];
-//   let ancestors: CastInterface[] = [];
-//   let currentHash = hash;
-//   data.result.casts.forEach(cast => {
-//     if (cast.hash == currentHash) thread.push(cast);
-//     // if (cast.hash == hash) ancestors.push(processCasts(cast, 'merkle'));
-//   });
-
-//   return ancestors;
-// }
-
 function getAncestors(hash: string, data: Root): CastInterface[] {
   let ancestorChain = [];
   let currentHash: string | undefined = hash;
@@ -78,8 +41,11 @@ function getAncestors(hash: string, data: Root): CastInterface[] {
   // this is not elegant, abstract this
   let processedCasts: CastInterface[] = [];
   ancestorChain.forEach(cast => {
-    processedCasts.push(processCast(cast, 'merkle')!);
-
+    let processedCast = processCast(cast, 'merkle');
+    if (processedCast) {
+      processedCast.parent = undefined;
+      processedCasts.push(processedCast);
+    }
   });
   return processedCasts;
 }
@@ -92,39 +58,6 @@ function getChildren(hash: string, data: Root) {
 
   });
   return processedCasts;
-}
-
-// not done
-function nestCasts(data: Root) {
-  const casts = data.result.casts;
-  // Create an empty array to store the nested structure
-  const nestedCasts = [];
-
-  // Iterate over the array of objects
-  for (const cast of casts) {
-    const newCast = processCast(cast);
-    if (newCast) {
-      if (!newCast.parent) { nestedCasts.push(newCast); }
-      else {
-        const parentCast = nestedCasts.find(obj => obj.hash === cast.parentHash);
-        parentCast?.children.push(newCast);
-        // parentCast?.children.push(processCasts([newCast], 'merkle')[0]);
-        // parentObject.children.push(newObject);
-      }
-
-      // if (!object.parentId) {
-      //   // If the object doesn't have a parentId property, add the new object to the array
-      //   nestedArray.push(newObject);
-      // } else {
-      //   // If the object has a parentId property, add the new object to the children array of the object with the parentId as the id property
-      //   const parentObject = nestedArray.find(obj => obj.id === object.parentId);
-      //   parentObject.children.push(newObject);
-      // }
-    }
-  }
-
-  // Return the nested array
-  return nestedCasts;
 }
 
 export const load: PageServerLoad = async ({ params }) => {
