@@ -163,13 +163,16 @@ function getOtherEndpoints(): EndpointMetadataInterface[] {
   });
 
   return [
-    {
-      id: 'K7S4kH22qNGuZ_dlLQVEz',
-      name: 'Perl',
-      url: 'https://api.perl.xyz/shuffled-perls',
-      type: 'perl',
-      nextPage: 0
-    },
+    /**
+     * todo: code to process perl is still buggy
+     */
+    // {
+    //   id: 'K7S4kH22qNGuZ_dlLQVEz',
+    //   name: 'Perl',
+    //   url: 'https://api.perl.xyz/shuffled-perls',
+    //   type: 'perl',
+    //   nextPage: 1
+    // },
     {
       id: 'i4HKWuOsocVvY1y3-8gms',
       name: '?search=nouns',
@@ -706,21 +709,24 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], use
           casts = [...casts, ...processCasts(rawCasts, 'merkleNotification', endpoint.username)];
         }
 
-        else if (endpoint.type == 'perl' && endpoint.nextPage) {
-          if (endpoint.nextPage > 0) finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
+        /**
+         * it works somewhat but still buggy as hell
+         */
+        // else if (endpoint.type == 'perl' && endpoint.nextPage) {
+        //   if (endpoint.nextPage > 0) finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
 
-          const response = await fetch(finalUrl);
-          const data: PerlCastArray = await response.json();
+        //   const response = await fetch(finalUrl);
+        //   const data: PerlCastArray = await response.json();
 
-          // update nextPage
-          const nextPage = endpoint.nextPage;
-          let newEndpoint = endpoint;
-          newEndpoint.nextPage = nextPage + 1;
-          endpointWithNext.push(newEndpoint);
+        //   // update nextPage
+        //   const nextPage = endpoint.nextPage;
+        //   let newEndpoint = endpoint;
+        //   newEndpoint.nextPage = nextPage + 1;
+        //   endpointWithNext.push(newEndpoint);
 
-          // append the casts
-          casts = [...casts, ...processCasts(data, 'perl')];
-        }
+        //   // append the casts
+        //   casts = [...casts, ...processCasts(data, 'perl')];
+        // }
 
       } catch (e) {
         console.error(e);
