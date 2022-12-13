@@ -20,9 +20,6 @@
 	$: pfpLineUpClass = pfpLineUp
 		? `before:h-full before:border-l-2 before:border-neutral-700 before:absolute before:ml-6`
 		: '';
-
-	export let theCast = false;
-	$: theCastClass = theCast ? `text-lg bg-[#212121]` : '';
 </script>
 
 <a href={`/cast/${cast.hash}`}>
@@ -53,11 +50,11 @@
 			</p>
 		</div>
 	{:else}
-		<div class="relative px-4 pb-2 bg-neutral-900 {theCastClass}">
+		<div class="relative px-4 pb-2 bg-neutral-900">
 			<div class={pfpLineUpClass} />
 		</div>
 	{/if}
-	<div class="bg-neutral-900 p-4 pb-2 pt-0 flex space-x-4 min-w-0 relative {theCastClass}">
+	<div class="bg-neutral-900 px-4 pb-2 flex space-x-4 min-w-0 relative">
 		<div class="h-12 w-12 flex-none {pfpLineDownClass}">
 			<a href={`/@${cast.author.username}`}>
 				<img
@@ -101,9 +98,6 @@
 	<ReplyTextbox {cast} {toggleReplyTextbox} />
 {/if}
 
-<!-- todo: figure out a better way to do this -->
-{#if theCast}
-	<div class="h-2 w-full bg-[#0a0a0a]" />
-{:else if !pfpLineDown}
+{#if !pfpLineDown}
 	<div class="h-0.5 w-full bg-[#0a0a0a]" />
 {/if}
