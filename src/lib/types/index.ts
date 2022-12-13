@@ -44,7 +44,7 @@ export interface ColumnInterface {
  * 
  * @param username for recast text (todo: move this somewhere)
  */
-export interface EndpointMetadataInterface {
+export interface EndpointInterface {
   id: string,
   url: string,
   type: string,

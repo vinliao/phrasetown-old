@@ -1,10 +1,10 @@
 import { getUpstashName } from "$lib/utils";
 import type { PageServerLoad } from './$types';
 import { decode, encode } from 'js-base64';
-import type { CastInterface, EndpointMetadataInterface } from "$lib/types";
+import type { CastInterface, EndpointInterface } from "$lib/types";
 import { fetchEndpoints, getHomeEndpoints } from '$lib/utils';
 
-async function fetchFromUpstash(): (Promise<{ casts: CastInterface[], endpoints: EndpointMetadataInterface[]; } | undefined>) {
+async function fetchFromUpstash(): (Promise<{ casts: CastInterface[], endpoints: EndpointInterface[]; } | undefined>) {
   try {
 
     const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
@@ -27,7 +27,7 @@ async function fetchFromUpstash(): (Promise<{ casts: CastInterface[], endpoints:
   }
 }
 
-async function saveToUpstash(data: { casts: CastInterface[], endpoints: EndpointMetadataInterface[]; }) {
+async function saveToUpstash(data: { casts: CastInterface[], endpoints: EndpointInterface[]; }) {
   const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
   const upstashKey = import.meta.env.VITE_UPSTASH_KEY;
 

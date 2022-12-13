@@ -1,13 +1,13 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import type { CastInterface, EndpointMetadataInterface } from '$lib/types';
+	import type { CastInterface, EndpointInterface } from '$lib/types';
 	import Cast from '$lib/components/Cast.svelte';
 	import { fade } from 'svelte/transition';
 	import { fetchMore } from '$lib/utils';
 	import { showNoticeError } from '$lib/stores';
 	import IntersectionObserver from 'svelte-intersection-observer';
 
-	export let data: { casts: CastInterface[]; endpoints: EndpointMetadataInterface[] };
+	export let data: { casts: CastInterface[]; endpoints: EndpointInterface[] };
 	let casts = data.casts;
 	let endpoints = data.endpoints;
 	const name = data.endpoints[0].name;

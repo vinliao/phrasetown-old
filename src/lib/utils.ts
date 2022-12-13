@@ -1,13 +1,13 @@
-import type { CastInterface, EndpointMetadataInterface } from '$lib/types';
+import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
 import { orderBy } from 'lodash-es';
-import type { Cast as SearchcasterCastInterface, Root as SearchcasterApiResponse } from '$lib/types/searchcaster';
-import type { OpenGraph as PerlOpenGraphInterface, } from '$lib/types/perl';
-import type { OpenGraph as MerkleOpenGraphInterface, Cast as MerkleCastInterface, Data as MerkleApiResponse } from '$lib/types/merkleUser';
-import type { Cast as MerkleNotificationInterface, Data as MerkleNotificationResponse } from '$lib/types/merkleNotification';
-import type { CastArray as PerlCastArray, Cast as PerlCast } from '$lib/types/perl';
+import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
+import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
+import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
+import type { Cast as MerkleNotification, Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
+import type { CastArray as PerlApiResponse, Cast as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
 /**
@@ -20,7 +20,7 @@ import * as timeago from 'timeago.js';
  * @param username connected user username
  * @returns list of unfetched endpoints
  */
-export function getNotificationEndpoints(): EndpointMetadataInterface[] {
+export function getNotificationEndpoints(): EndpointInterface[] {
   return [
     {
       id: 'eVGJjvV-nABOx8dMqu9ZE',
@@ -39,8 +39,8 @@ export function getNotificationEndpoints(): EndpointMetadataInterface[] {
  * 
  * @returns list of unfetched endpoints
  */
-function getFarlistEndpoints(): EndpointMetadataInterface[] {
-  let listEndpoint: EndpointMetadataInterface[] = [];
+function getFarlistEndpoints(): EndpointInterface[] {
+  let listEndpoint: EndpointInterface[] = [];
 
   const farlist = [
     {
@@ -123,7 +123,7 @@ function getFarlistEndpoints(): EndpointMetadataInterface[] {
  * 
  * @returns list of unfetched endpoints
  */
-function getNewEndpoints(): EndpointMetadataInterface[] {
+function getNewEndpoints(): EndpointInterface[] {
   return [
     {
       id: 'GK-rQ3w0s41xcTeRwVXgw',
@@ -142,8 +142,8 @@ function getNewEndpoints(): EndpointMetadataInterface[] {
  * 
  * @returns list of unfetched endpoints
  */
-function getOtherEndpoints(): EndpointMetadataInterface[] {
-  let listEndpoint: EndpointMetadataInterface[] = [];
+function getOtherEndpoints(): EndpointInterface[] {
+  let listEndpoint: EndpointInterface[] = [];
 
   const searchlist = [
     { name: "?search=BTC&ETH", id: 'engxPcFaJ0WrtvbnGFoOX', searchTerms: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
@@ -204,7 +204,7 @@ export function getFeedEndpoints(id?: string) {
  * the feed updates infrequently, means less novelty, good for 
  * development purposes, the "Dev" feed should be purged on production
  */
-export function getHomeEndpoints(): EndpointMetadataInterface[] {
+export function getHomeEndpoints(): EndpointInterface[] {
   if (import.meta.env.PROD) {
     return [
       {
@@ -249,7 +249,7 @@ function getUnixTimeMinusXHours(x: number): number {
  * @param openGraph openGraph object from Merkle's or Perl's API
  * @returns link to image
  */
-function getImageLink(openGraph: PerlOpenGraphInterface | MerkleOpenGraphInterface): string | undefined {
+function getImageLink(openGraph: PerlOpenGraph | MerkleOpenGraph): string | undefined {
   if (typeof openGraph.url === 'string' && openGraph.url !== '') {
     if (/\.(jpg|png|gif)$/.test(openGraph.url)) {
       return openGraph.url;
@@ -312,7 +312,7 @@ export function getTimeago(timestamp: number): string {
  */
 function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInterface[] {
   let result: CastInterface[] = [];
-  data.result.casts.forEach((cast: MerkleCastInterface) => {
+  data.result.casts.forEach((cast: MerkleCast) => {
     try {
       let parent;
 
@@ -370,9 +370,9 @@ function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInt
  * @param data api response from merkle's notification api endpint
  * @returns array of casts, ready to be displayed
  */
-function processMerkleNotification(data: MerkleNotificationInterface[], recaster?: string): CastInterface[] {
+function processMerkleNotification(data: MerkleNotification[], recaster?: string): CastInterface[] {
   let result: CastInterface[] = [];
-  data.forEach((cast: MerkleNotificationInterface) => {
+  data.forEach((cast: MerkleNotification) => {
     try {
       let parent;
 
@@ -433,7 +433,7 @@ function processMerkleNotification(data: MerkleNotificationInterface[], recaster
 function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[] {
   let result: CastInterface[] = [];
 
-  data.casts.forEach((cast: SearchcasterCastInterface) => {
+  data.casts.forEach((cast: SearchcasterCast) => {
     try {
       let parent;
       if (typeof cast.body.data.replyParentMerkleRoot === "string" && typeof cast.meta.replyParentUsername.username === "string") {
@@ -476,7 +476,7 @@ function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[
  * @param data api response from merkle's api endpint
  * @returns array of casts, ready to be displayed
  */
-function processPerlCasts(data: PerlCastArray): CastInterface[] {
+function processPerlCasts(data: PerlApiResponse): CastInterface[] {
   let result: CastInterface[] = [];
   data.forEach((cast: PerlCast) => {
     try {
@@ -616,10 +616,10 @@ function filterAndSortCasts(casts: CastInterface[]): CastInterface[] {
  * @param endpoints 
  * @param firstPage if true, fetch next page (with cursor or ?page=X)
  */
-export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], userHubKey?: string):
-  Promise<{ casts: CastInterface[], endpoints: EndpointMetadataInterface[]; }> {
+export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?: string):
+  Promise<{ casts: CastInterface[], endpoints: EndpointInterface[]; }> {
   let casts: CastInterface[] = [];
-  let endpointWithNext: EndpointMetadataInterface[] = [];
+  let endpointWithNext: EndpointInterface[] = [];
   let hubKey = import.meta.env.VITE_HUB_KEY;
   if (userHubKey) hubKey = userHubKey;
 
@@ -678,8 +678,8 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], use
             },
           });
 
-          let data: MerkleNotificationResponse = await response.json();
-          let rawCasts: MerkleNotificationInterface[] = [];
+          let data: MerkleNotificationApiResponse = await response.json();
+          let rawCasts: MerkleNotification[] = [];
           if ("notifications" in data.result) {
             const notifications = data.result.notifications;
             for (const key in notifications) {
@@ -712,7 +712,7 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], use
         //   if (endpoint.nextPage > 0) finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
 
         //   const response = await fetch(finalUrl);
-        //   const data: PerlCastArray = await response.json();
+        //   const data: PerlApiResponse = await response.json();
 
         //   // update nextPage
         //   const nextPage = endpoint.nextPage;
@@ -762,7 +762,7 @@ export function getUpstashName() {
  * @param casts casts to append
  * @param endpoints list of endpoints to fetch from
  */
-export async function fetchMore(casts: CastInterface[], endpoints: EndpointMetadataInterface[]) {
+export async function fetchMore(casts: CastInterface[], endpoints: EndpointInterface[]) {
   const response = await fetch('/api/fetch-more', {
     method: 'PUT',
     body: JSON.stringify({ endpoints })

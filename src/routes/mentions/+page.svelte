@@ -1,13 +1,13 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import type { CastInterface, EndpointMetadataInterface } from '$lib/types';
+	import type { CastInterface, EndpointInterface } from '$lib/types';
 	import Cast from '$lib/components/Cast.svelte';
 	import { fade } from 'svelte/transition';
 	import { fidWritable, userHubKeyWritable, usernameWritable } from '$lib/stores';
 	import { onMount } from 'svelte';
 
 	let casts: CastInterface[] = [];
-	let endpoints: EndpointMetadataInterface[] = [];
+	let endpoints: EndpointInterface[] = [];
 	onMount(() => {
 		$: if ($fidWritable && $usernameWritable && $userHubKeyWritable) {
 			(async () => {
