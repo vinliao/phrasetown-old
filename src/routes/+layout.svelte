@@ -68,7 +68,9 @@
 	<NoticeModalError message={$showNoticeError} />
 {/if}
 
-<div class="scrollbar scrollbar-thumb-neutral-400 scrollbar-track-neutral-700 flex">
+<div
+	class="scrollbar scrollbar-thumb-neutral-400 scrollbar-track-neutral-700 flex text-sm md:text-base"
+>
 	<div class="flex-1 justify-end flex relative">
 		<Panel />
 	</div>
