@@ -22,6 +22,8 @@
 		: '';
 </script>
 
+<!-- this has a left pad layout shift, but not when "recasted by" text is present
+the bug disappears when <a> is removed -->
 <a href={`/cast/${cast.hash}`}>
 	<!-- needs documentation on how this works -->
 	{#if cast.recasted}
