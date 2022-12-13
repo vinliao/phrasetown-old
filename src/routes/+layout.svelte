@@ -1,6 +1,7 @@
 <script>
 	import '../app.postcss';
 	import Panel from '$lib/components/Panel.svelte';
+	import BottomPanel from '$lib/components/BottomPanel.svelte';
 	import { navigating } from '$app/stores';
 	import nprogress from 'nprogress';
 	import '$lib/nprogress.css'; // for customizing the nprogress thing
@@ -71,11 +72,14 @@
 <div
 	class="scrollbar scrollbar-thumb-neutral-400 scrollbar-track-neutral-700 flex text-sm md:text-base"
 >
-	<div class="flex-1 justify-end flex relative">
+	<div class="flex-1 justify-end hidden md:flex relative">
 		<Panel />
 	</div>
 	<div class="max-w-xl w-full bg-neutral-900">
 		<slot />
+		<!-- this div is to pad the bottom, so bottom panel doesn't hide cast -->
+		<div class="w-full h-14 bg-neutral-900" />
+		<BottomPanel />
 	</div>
 	<div class="flex-1" />
 </div>

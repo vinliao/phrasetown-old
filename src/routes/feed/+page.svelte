@@ -19,7 +19,7 @@
 		<ul class="list-disc list-inside text-neutral-500">
 			{#each Object.entries(groupedEndpoints) as [key, value], index (key)}
 				<li>
-					<span class="text-neutral-500 hover:text-neutral-200 transition font-bold text-lg">
+					<span class="text-neutral-500 hover:text-neutral-200 transition font-bold text-base md:text-lg">
 						<a href={`/feed/${key}`}>{groupedEndpoints[key][0].name}</a>
 					</span>
 				</li>

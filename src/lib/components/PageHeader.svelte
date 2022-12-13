@@ -24,7 +24,7 @@
 			/>
 		</svg>
 	{/if}
-	<span class="text-xl font-bold">{name}</span>
+	<span class="text-lg md:text-xl font-bold">{name}</span>
 	<div class="flex-1" />
 </div>
 <div class="h-0.5 w-full bg-[#0a0a0a]" />
