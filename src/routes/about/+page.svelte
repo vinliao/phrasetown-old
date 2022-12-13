@@ -13,13 +13,17 @@
 			Farcaster, who prefers desktop over mobile, but aren&#39;t in the Apple Ecosystem.
 		</p>
 
-		<p>It's open-source: link</p>
-
 		<p>
-			Complaints, comments, feature requests? Ping me on Farcaster @pixel or email me
-			vincent@pixelhack.xyz. Bug report? Please file a GitHub Issue.
+			It's open-source: <a href="https://github.com/vinliao/phrasetown"
+				>https://github.com/vinliao/phrasetown</a
+			>
+		</p>
+		<p>
+			Complaints, comments, feature requests? Ping me on Farcaster <a
+				href="https://phrasetown.com/@pixel">@pixel</a
+			> or email me vincent@pixelhack.xyz. Bug report? Please file a GitHub Issue.
 		</p>
 
-    <p>🟪⛩️</p>
+		<p>🟪⛩️</p>
 	</div>
 </div>
