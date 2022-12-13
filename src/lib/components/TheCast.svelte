@@ -2,6 +2,7 @@
 	import type { CastInterface } from '$lib/types';
 	import ReplyTextbox from '$lib/components/ReplyTextbox.svelte';
 	import ReplyRecastLike from '$lib/components/ReplyRecastLike.svelte';
+	import { getTimeago } from '$lib/utils';
 	export let cast: CastInterface;
 
 	// texbox reply
@@ -57,7 +58,7 @@
 			</div>
 		{/if}
 
-		<ReplyRecastLike {cast} {toggleReplyTextbox} time={cast.timestamp} />
+		<ReplyRecastLike {cast} {toggleReplyTextbox} time={getTimeago(cast.timestamp)} />
 	</div>
 </div>
 

@@ -244,7 +244,7 @@ function linkify(text: string): string {
   return sanitizeHtml(rawHtml);
 }
 
-function makeTimeago(timestamp: number): string {
+export function getTimeago(timestamp: number): string {
   function enShort(number: number, index: number): [string, string] {
     return [
       ['just now', 'right now'],
@@ -311,7 +311,7 @@ function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInt
         hash: cast.hash,
         text: linkify(cast.text),
         image,
-        timestamp: makeTimeago(cast.timestamp),
+        timestamp: cast.timestamp,
         likes: cast.reactions.count,
         replies: cast.replies.count,
         recasts: cast.recasts.count,
@@ -371,7 +371,7 @@ function processMerkleNotification(data: MerkleNotificationInterface[], recaster
         hash: cast.hash,
         text: linkify(cast.text),
         image,
-        timestamp: makeTimeago(cast.timestamp),
+        timestamp: cast.timestamp,
         likes: cast.reactions.count,
         replies: cast.replies.count,
         recasts: cast.recasts.count,
@@ -416,7 +416,7 @@ function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[
         recasted,
         text: linkify(cast.body.data.text),
         image: cast.body.data.image,
-        timestamp: makeTimeago(cast.body.publishedAt),
+        timestamp: cast.body.publishedAt,
         likes: cast.meta.reactions.count,
         recasts: cast.meta.recasts.count,
         replies: cast.meta.numReplyChildren,
@@ -499,7 +499,7 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
       hash: cast.hash,
       text: linkify(cast.text),
       image,
-      timestamp: makeTimeago(cast.timestamp),
+      timestamp: cast.timestamp,
       likes: cast.reactions.count,
       replies: cast.replies.count,
       recasts: cast.recasts.count,

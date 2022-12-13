@@ -2,6 +2,7 @@
 	import type { CastInterface } from '$lib/types';
 	import ReplyTextbox from '$lib/components/ReplyTextbox.svelte';
 	import ReplyRecastLike from '$lib/components/ReplyRecastLike.svelte';
+	import { getTimeago } from '$lib/utils';
 	export let cast: CastInterface;
 
 	// texbox reply
@@ -74,7 +75,7 @@
 			<a class="hover:underline text-neutral-400" href={`/@${cast.author.username}`}
 				>@{cast.author.username}</a
 			>
-			<span class="text-neutral-400">· {cast.timestamp}</span>
+			<span class="text-neutral-400">· {getTimeago(cast.timestamp)}</span>
 			{#if cast.parent}
 				<p class="text-neutral-400">
 					Replying to <a href={`/@${cast.parent.username}`}>@{cast.parent.username}</a>
