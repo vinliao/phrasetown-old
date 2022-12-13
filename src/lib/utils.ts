@@ -283,6 +283,10 @@ function linkify(text: string): string {
   return sanitizeHtml(rawHtml);
 }
 
+/**
+ * @param timestamp unix timestamp
+ * @returns text like "4w, 3h, 11mo"
+ */
 export function getTimeago(timestamp: number): string {
   function enShort(number: number, index: number): [string, string] {
     return [
