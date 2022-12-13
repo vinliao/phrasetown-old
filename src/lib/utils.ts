@@ -185,15 +185,11 @@ function getOtherEndpoints(): EndpointMetadataInterface[] {
 }
 
 /**
- * there are multiple kinds of endpoints: home, new, and "feed"
- * home is endpoint to get home page, new is the latest cast
- * feed endpoints are everything else (farlist, search terms, perls)
- * 
  * @param id (optional) if not specified, return all endpoint
  * @returns 
  */
 export function getFeedEndpoints(id?: string) {
-  const allEndpoints = [...getFarlistEndpoints(), ...getOtherEndpoints()];
+  const allEndpoints = [...getNewEndpoints(), ...getFarlistEndpoints(), ...getOtherEndpoints(), ...getHomeEndpoints()];
 
   if (id) {
     return allEndpoints.filter(object => object.id === id);
