@@ -44,7 +44,7 @@
 	<div in:fade={{ duration: 200 }}>
 		<PageHeader {name} />
 		{#each casts as cast, index}
-			{#if index == Math.floor(casts.length * 0.7)}
+			{#if index == casts.length - 10}
 				<div bind:this={element}>
 					<Cast {cast} />
 				</div>
