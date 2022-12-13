@@ -7,6 +7,7 @@ import type { Cast as SearchcasterCastInterface, Root as SearchcasterApiResponse
 import type { OpenGraph as PerlOpenGraphInterface, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraphInterface, Cast as MerkleCastInterface, Data as MerkleApiResponse } from '$lib/types/merkleUser';
 import type { Cast as MerkleNotificationInterface, Data as MerkleNotificationResponse } from '$lib/types/merkleNotification';
+import type { CastArray as PerlCastArray, Cast as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
 /**
@@ -99,11 +100,6 @@ function getFarlistEndpoints(): EndpointMetadataInterface[] {
     }
   ];
 
-  const searchlist = [
-    { name: "?search=BTC&ETH", id: 'engxPcFaJ0WrtvbnGFoOX', searchTerms: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
-    { name: "?search=product", id: 'ESf-K7o8Nu7QmHTp6XLsr', searchTerms: ['product', 'startup'] },
-  ];
-
   farlist.forEach(list => {
     list.users.forEach(user => {
       listEndpoint.push({
@@ -115,6 +111,44 @@ function getFarlistEndpoints(): EndpointMetadataInterface[] {
       });
     });
   });
+
+  return listEndpoint;
+}
+
+/**
+ * an endpoint is an object which contains all the information to fetch
+ * casts, which is then turned into columns
+ * 
+ * this endpoint is for fetching the recent cast in the network
+ * 
+ * @returns list of unfetched endpoints
+ */
+function getNewEndpoints(): EndpointMetadataInterface[] {
+  return [
+    {
+      id: 'GK-rQ3w0s41xcTeRwVXgw',
+      name: 'New',
+      url: 'https://api.farcaster.xyz/v2/recent-casts',
+      type: 'merkle',
+    },
+  ];
+}
+
+/**
+ * an endpoint is an object which contains all the information to fetch
+ * casts, which is then turned into columns
+ * 
+ * this function returns endpoints to fetch searchcaster
+ * 
+ * @returns list of unfetched endpoints
+ */
+function getOtherEndpoints(): EndpointMetadataInterface[] {
+  let listEndpoint: EndpointMetadataInterface[] = [];
+
+  const searchlist = [
+    { name: "?search=BTC&ETH", id: 'engxPcFaJ0WrtvbnGFoOX', searchTerms: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
+    { name: "?search=product", id: 'ESf-K7o8Nu7QmHTp6XLsr', searchTerms: ['product', 'startup'] },
+  ];
 
   searchlist.forEach(search => {
     search.searchTerms.forEach(term => {
@@ -128,57 +162,7 @@ function getFarlistEndpoints(): EndpointMetadataInterface[] {
     });
   });
 
-  return listEndpoint;
-}
-
-
-/**
- * on development environment, returns the most upvoted casts as feed
- * the feed updates infrequently, means less novelty, good for 
- * development purposes, the "Dev" feed should be purged on production
- */
-function getDevEndpoints(): EndpointMetadataInterface[] {
   return [
-    {
-      id: 'AaH8H3KduTTPVIdFFEqkR',
-      name: 'Dev',
-      url: 'https://searchcaster.xyz/api/search?count=50&engagement=reactions',
-      type: 'searchcaster',
-      nextPage: 1
-    },
-  ];
-}
-
-/**
- * an endpoint is an object which contains all the information to fetch
- * casts, which is then turned into columns
- * 
- * this function returns endpoints to fetch searchcaster
- * 
- * @returns list of unfetched endpoints
- */
-function getSearchcasterEndpoints(): EndpointMetadataInterface[] {
-  return [
-    {
-      id: 'GK-rQ3w0s41xcTeRwVXgw',
-      name: 'New',
-      url: 'https://api.farcaster.xyz/v2/recent-casts',
-      type: 'merkle',
-    },
-    {
-      id: 'REyJisAJvqk4-sjeB4tWW',
-      name: 'Hot',
-      url: `https://searchcaster.xyz/api/search?count=35&engagement=reactions&after=${getUnixTimeMinusXHours(24)}`,
-      type: 'searchcaster',
-      nextPage: 1
-    },
-    {
-      id: "REyJisAJvqk4-sjeB4tWW",
-      name: 'Hot',
-      url: `https://searchcaster.xyz/api/search?count=15&engagement=replies&after=${getUnixTimeMinusXHours(6)}`,
-      type: 'searchcaster',
-      nextPage: 1
-    },
     {
       id: 'K7S4kH22qNGuZ_dlLQVEz',
       name: 'Perl',
@@ -193,7 +177,63 @@ function getSearchcasterEndpoints(): EndpointMetadataInterface[] {
       type: 'searchcaster',
       nextPage: 1
     },
+    ...listEndpoint
   ];
+}
+
+/**
+ * there are multiple kinds of endpoints: home, new, and "feed"
+ * home is endpoint to get home page, new is the latest cast
+ * feed endpoints are everything else (farlist, search terms, perls)
+ * 
+ * @param id (optional) if not specified, return all endpoint
+ * @returns 
+ */
+export function getFeedEndpoints(id?: string) {
+  const allEndpoints = [...getFarlistEndpoints(), ...getOtherEndpoints()];
+
+  if (id) {
+    return allEndpoints.filter(object => object.id === id);
+  }
+
+  return allEndpoints;
+}
+
+/**
+ * this is the endpoint for fetching the home page
+ * on development environment, returns the most upvoted casts as feed
+ * the feed updates infrequently, means less novelty, good for 
+ * development purposes, the "Dev" feed should be purged on production
+ */
+export function getHomeEndpoints(): EndpointMetadataInterface[] {
+  if (import.meta.env.PROD) {
+    return [
+      {
+        id: 'REyJisAJvqk4-sjeB4tWW',
+        name: 'Hot',
+        url: `https://searchcaster.xyz/api/search?count=35&engagement=reactions&after=${getUnixTimeMinusXHours(24)}`,
+        type: 'searchcaster',
+        nextPage: 1
+      },
+      {
+        id: "REyJisAJvqk4-sjeB4tWW",
+        name: 'Hot',
+        url: `https://searchcaster.xyz/api/search?count=15&engagement=replies&after=${getUnixTimeMinusXHours(6)}`,
+        type: 'searchcaster',
+        nextPage: 1
+      },
+    ];
+  } else {
+    return [
+      {
+        id: 'AaH8H3KduTTPVIdFFEqkR',
+        name: 'Dev',
+        url: 'https://searchcaster.xyz/api/search?count=50&engagement=reactions',
+        type: 'searchcaster',
+        nextPage: 1
+      },
+    ];
+  }
 }
 
 /**
@@ -386,6 +426,7 @@ function processMerkleNotification(data: MerkleNotificationInterface[], recaster
 
   return result;
 }
+
 /**
  * @param data api response from searchcaster endpoint
  * @returns array of casts, ready to be displayed
@@ -433,6 +474,48 @@ function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[
 }
 
 /**
+ * @param data api response from merkle's api endpint
+ * @returns array of casts, ready to be displayed
+ */
+function processPerlCasts(data: PerlCastArray): CastInterface[] {
+  let result: CastInterface[] = [];
+  data.forEach((cast: PerlCast) => {
+    try {
+      let image;
+      if (cast.payload.attachments && cast.payload.attachments.openGraph.length > 0) {
+        // if there's image attached to cast
+        image = getImageLink(cast.payload.attachments.openGraph[0]);
+      }
+
+      result.push({
+        author: {
+          username: cast.payload.body.username,
+          displayName: cast.payload.meta.displayName,
+          pfp: cast.payload.meta.avatar,
+          fid: cast.payload.body.fid
+        },
+        parent: undefined,
+        recasted: undefined,
+        hash: cast.payload.merkleRoot,
+        text: linkify(cast.payload.body.data.text),
+        image,
+        timestamp: cast.payload.body.publishedAt,
+        likes: cast.payload.meta.reactions.count,
+        recasts: cast.payload.meta.recasts.count,
+        replies: cast.payload.meta.numReplyChildren,
+      });
+
+
+    } catch (e) {
+      // if type wrong, don't push the cast, and don't brick the entire app
+      console.error(e);
+    }
+  });
+
+  return result;
+}
+
+/**
  * todo
  * 
  * @param data 
@@ -448,6 +531,8 @@ export function processCasts(data: any, type: string, recaster?: string): CastIn
     return processMerkleNotification(data, recaster);
   } else if (type == 'searchcaster') {
     return processSearchcasterCasts(data);
+  } else if (type == 'perl') {
+    return processPerlCasts(data);
   }
 
   // todo: handle error
@@ -513,56 +598,6 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
 
   // todo: handle error
 }
-
-/**
- * 
- * @param id (optional) if not specified, return all endpoint
- * @returns 
- */
-export function getFeedEndpoints(id?: string) {
-  const allEndpoints = [...getSearchcasterEndpoints(), ...getFarlistEndpoints()];
-
-  if (id) {
-    return allEndpoints.filter(object => object.id === id);
-  }
-
-  return allEndpoints;
-}
-
-export function getHomeEndpoints(): EndpointMetadataInterface[] {
-  if (import.meta.env.PROD) {
-    return getFeedEndpoints().filter(endpoint => endpoint.name === 'Hot');
-  } else {
-    return getDevEndpoints();
-  }
-}
-
-// async function fetchMerkle() {
-
-//   const response = await fetch(finalUrl, {
-//     headers: {
-//       'Content-Type': 'application/json',
-//       'Authorization': `Bearer ${hubKey}`
-//     },
-//   });
-
-//   const data: MerkleCastData = await response.json();
-
-//   // update cursor
-//   try {
-//     let newEndpoint = endpoint;
-//     const nextCursor = data.next.cursor;
-//     if (nextCursor) newEndpoint.cursor = data.next.cursor;
-//     endpointWithNext.push(newEndpoint);
-//   } catch {
-//     // cursor doesn't exist
-//     console.log('cursor does not exist');
-//     endpointWithNext.push(endpoint);
-//   }
-
-//   // append the casts
-//   casts = [...casts, ...processCast(data.result.casts, 'merkle', endpoint.username)];
-// }
 
 /**
  * filter out duplicate casts, then sort ascending by timestamp
@@ -669,6 +704,22 @@ export async function fetchEndpoints(endpoints: EndpointMetadataInterface[], use
           }
 
           casts = [...casts, ...processCasts(rawCasts, 'merkleNotification', endpoint.username)];
+        }
+
+        else if (endpoint.type == 'perl' && endpoint.nextPage) {
+          if (endpoint.nextPage > 0) finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
+
+          const response = await fetch(finalUrl);
+          const data: PerlCastArray = await response.json();
+
+          // update nextPage
+          const nextPage = endpoint.nextPage;
+          let newEndpoint = endpoint;
+          newEndpoint.nextPage = nextPage + 1;
+          endpointWithNext.push(newEndpoint);
+
+          // append the casts
+          casts = [...casts, ...processCasts(data, 'perl')];
         }
 
       } catch (e) {

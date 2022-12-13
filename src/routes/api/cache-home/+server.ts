@@ -1,5 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from '../../../../.svelte-kit/types/src/routes/api/get-home-data/$types';
+import type { RequestHandler } from '../../../../.svelte-kit/types/src/routes/api/cache-home/$types';
 import { fetchEndpoints, getHomeEndpoints } from '$lib/utils';
 import { encode } from 'js-base64';
 import { getUpstashName } from '$lib/utils';
