@@ -53,3 +53,8 @@ export interface EndpointInterface {
   nextPage?: number,
   username?: string; // only exist when endpoint is a farlist
 }
+
+export interface FeedInterface {
+  casts: CastInterface[],
+  enpdoints: EndpointInterface[];
+}
