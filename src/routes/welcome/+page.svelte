@@ -10,9 +10,11 @@
 
 <div in:fade={{ duration: 200 }}>
 	<PageHeader name="Welcome!" />
-	<p class="font-[900]">Connection successful. Welcome to Phrasetown!</p>
+	<div class="p-4 flex flex-col space-y-2">
+		<p class="font-[900]">Connection successful. Welcome to Phrasetown!</p>
 
-	<p>You will be redirected to the home page shortly.</p>
+		<p>You will be redirected to the home page shortly.</p>
 
-	<p>🟪⛩️</p>
+		<p>🟪⛩️</p>
+	</div>
 </div>
