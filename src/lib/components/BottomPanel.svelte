@@ -1,5 +1,5 @@
 <div class="relative flex md:hidden z-20">
-	<div class="fixed bottom-0 h-14 w-full flex bg-neutral-800 justify-between p-4 px-10 drop-shadow">
+	<div class="fixed bottom-0 h-14 w-full flex bg-neutral-800 justify-around p-4 drop-shadow">
 		<a href="/">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
