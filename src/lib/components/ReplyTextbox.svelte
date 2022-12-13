@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { showNotice, showNoticeError, userHubKeyWritable } from '$lib/stores';
+	import type { Root } from '$lib/types/merkleUserByUsername';
 
 	export let toggleReplyTextbox = () => {};
 	export let cast: CastInterface;
@@ -33,14 +34,9 @@
 	}
 
 	async function fetchFid(username: string): Promise<number> {
-		const response = await fetch(`/api/get-user-by-username`, {
-			method: 'PUT',
-			body: JSON.stringify({
-				username,
-				hubKey: import.meta.env.VITE_HUB_KEY
-			})
-		});
-		return (await response.json()).fid;
+		const response = await fetch(`/api/get-user-by-username?username=${username}`);
+    const data: Root = await response.json()
+    return data.data.result.user.fid;
 	}
 
 	let isSending = false;

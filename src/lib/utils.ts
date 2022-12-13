@@ -270,7 +270,7 @@ function getImageLink(openGraph: PerlOpenGraph | MerkleOpenGraph): string | unde
  * @param text user's cast in string
  * @returns user's cast as html
  */
-function linkify(text: string): string {
+export function linkify(text: string): string {
   const linkifyOption = {
     truncate: 30,
     // href needs to be sliced because it starts with `/`

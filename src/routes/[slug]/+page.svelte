@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import type { Body as Bio } from '$lib/types/searchcasterUser';
 	import type { CastInterface } from '$lib/types';
 	import Cast from '$lib/components/Cast.svelte';
+	import type { User } from '$lib/types/merkleUserByUsername';
+	import { linkify } from '$lib/utils';
 
-	export let data: { bio: Bio; topLevelCasts: CastInterface[]; replyCasts: CastInterface[] };
-	const { bio, topLevelCasts, replyCasts } = data;
+	export let data: { user: User; topLevelCasts: CastInterface[]; replyCasts: CastInterface[] };
+	const { user, topLevelCasts, replyCasts } = data;
 
 	let currentDisplayIndex = 0;
 
@@ -22,16 +23,16 @@
 	<div class="p-4 break-words" in:fade={{ duration: 200 }}>
 		<div class="flex mb-3">
 			<div class="flex-1" />
-			<img class="h-32 w-32 rounded-[2rem]" src={bio.avatarUrl} alt="" />
+			<img class="h-32 w-32 rounded-[2rem]" src={user.pfp.url} alt="" />
 			<div class="flex-1" />
 		</div>
 		<div class="flex space-x-2 text-lg mb-1 items-center">
-			<span class="font-bold truncate">{bio.displayName}</span>
-			<span>@{bio.username}</span>
+			<span class="font-bold truncate">{user.displayName}</span>
+			<span>@{user.username}</span>
 		</div>
 		<div class="mb-10 flex flex-col">
-			{#if bio.bio != ''}
-				<span>{bio.bio}</span>
+			{#if user.profile.bio.text != ''}
+				<p>{@html linkify(user.profile.bio.text)}</p>
 			{/if}
 		</div>
 
@@ -55,13 +56,13 @@
 	{#if currentDisplayIndex == 0}
 		<div in:fade={{ duration: 200 }}>
 			{#each topLevelCasts as cast}
-				<Cast {cast} profile={true} />
+				<Cast {cast} />
 			{/each}
 		</div>
 	{:else if currentDisplayIndex == 1}
 		<div in:fade={{ duration: 200 }}>
 			{#each replyCasts as cast}
-				<Cast {cast} profile={true} />
+				<Cast {cast} />
 			{/each}
 		</div>
 	{/if}
