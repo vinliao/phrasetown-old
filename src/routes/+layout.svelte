@@ -78,7 +78,7 @@
 	<div class="max-w-xl w-full bg-neutral-900">
 		<slot />
 		<!-- this div is to pad the bottom, so bottom panel doesn't hide cast -->
-		<div class="w-full h-14 bg-neutral-900" />
+		<div class="flex md:hidden w-full h-14 bg-neutral-900" />
 		<BottomPanel />
 	</div>
 	<div class="flex-1" />
