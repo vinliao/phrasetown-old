@@ -40,11 +40,9 @@ export function getNotificationEndpoints(): EndpointInterface[] {
  * @returns list of unfetched endpoints
  */
 function getFarlistEndpoints(): EndpointInterface[] {
-  let listEndpoint: EndpointInterface[] = [];
-
   const farlist = [
     {
-      name: "Builders", id: 'ZQ_v4OlpAaRH6UJyB_ZsG', users: [
+      name: "Builders", users: [
         { fid: 1356, username: 'borodutch' },
         { fid: 347, username: 'greg' },
         { fid: 2, username: 'v' },
@@ -55,7 +53,7 @@ function getFarlistEndpoints(): EndpointInterface[] {
       ]
     },
     {
-      name: "Interesting", id: 'rz_mqas0eC-yTTyA5CE_k', users: [
+      name: "Interesting", users: [
         { fid: 1001, username: 'mattdesl' },
         { fid: 1946, username: 'dragonbanec' },
         { fid: 5253, username: 'dbkw' },
@@ -66,7 +64,7 @@ function getFarlistEndpoints(): EndpointInterface[] {
       ]
     },
     {
-      name: "Interesting #2", id: 'wX7AVGycind3A6hX5gyFn', users: [
+      name: "Interesting #2", users: [
         { fid: 267, username: 'aman' },
         { fid: 312, username: 'les' },
         { fid: 5009, username: 'tg' },
@@ -78,7 +76,7 @@ function getFarlistEndpoints(): EndpointInterface[] {
       ]
     },
     {
-      name: "Farcaster OG", id: 'DlX08LLpV8luiFrXboW_n', users: [
+      name: "Farcaster OG", users: [
         { fid: 129, username: 'phil' },
         { fid: 127, username: 'neuroswish' },
         { fid: 8, username: 'jacob' },
@@ -88,7 +86,7 @@ function getFarlistEndpoints(): EndpointInterface[] {
       ]
     },
     {
-      name: "Cool", id: 'H8_KkcycgRmc8JyV7vB9p', users: [
+      name: "Cool", users: [
         { fid: 373, username: 'jayme' },
         { fid: 431, username: 'j4ck' },
         { fid: 2458, username: 'rafa' },
@@ -100,10 +98,12 @@ function getFarlistEndpoints(): EndpointInterface[] {
     }
   ];
 
+  let listEndpoint: EndpointInterface[] = [];
+
   farlist.forEach(list => {
     list.users.forEach(user => {
       listEndpoint.push({
-        id: list.id,
+        id: idOf(list.name),
         name: list.name,
         url: `https://api.farcaster.xyz/v2/casts?fid=${user.fid}&includeDeletedCasts=false&limit=15`,
         type: 'merkle',
@@ -132,6 +132,34 @@ function getNewEndpoints(): EndpointInterface[] {
       type: 'merkle',
     },
   ];
+}
+
+/**
+ * id here is generated with `npx nanoid`
+ * nanoid docs: https://github.com/ai/nanoid
+ * 
+ * @returns return all endpoint-to-id mapping
+ */
+function getEndpointIdNameMapping() {
+  return [
+    { name: 'New', id: 'GK-rQ3w0s41xcTeRwVXgw' },
+    { name: 'Mention', id: 'eVGJjvV-nABOx8dMqu9ZE' },
+    { name: 'Home', id: 'REyJisAJvqk4-sjeB4tWW' },
+    { name: 'Dev', id: 'AaH8H3KduTTPVIdFFEqkR' },
+    { name: 'Builders', id: 'ZQ_v4OlpAaRH6UJyB_ZsG' },
+    { name: 'Interesting', id: 'rz_mqas0eC-yTTyA5CE_k' },
+    { name: 'Interesting #2', id: 'wX7AVGycind3A6hX5gyFn' },
+    { name: 'Farcaster OG', id: 'DlX08LLpV8luiFrXboW_n' },
+    { name: 'Cool', id: 'H8_KkcycgRmc8JyV7vB9p' },
+    { name: '?search=BTC&ETH', id: 'engxPcFaJ0WrtvbnGFoOX' },
+    { name: '?search=product', id: 'ESf-K7o8Nu7QmHTp6XLsr' },
+    { name: '?search=nouns', id: 'i4HKWuOsocVvY1y3-8gms' },
+  ];
+}
+
+function idOf(name: string): string | undefined {
+  const mapping = getEndpointIdNameMapping().find((mapping) => mapping.name === name);
+  return mapping ? mapping.id : undefined;
 }
 
 /**
@@ -602,13 +630,12 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
   // todo: handle error
 }
 
-/**
- * filter out duplicate casts, then sort ascending by timestamp
- */
-function filterAndSortCasts(casts: CastInterface[]): CastInterface[] {
-  return orderBy(casts.filter((obj, index, arr) => {
-    return arr.map((mapObj) => mapObj.hash).indexOf(obj.hash) === index;
-  }), 'timestamp', 'desc');
+function removeDuplicate(casts: CastInterface[]): CastInterface[] {
+  return [...new Set(casts)];
+}
+
+function sortCasts(casts: CastInterface[]): CastInterface[] {
+  return orderBy(casts, 'timestamp', 'desc');
 }
 
 /**
@@ -734,7 +761,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
     })
   );
 
-  return { casts: filterAndSortCasts(casts), endpoints: endpointWithNext };
+  return { casts: sortCasts(removeDuplicate(casts)), endpoints: endpointWithNext };
 }
 
 /**
