@@ -125,12 +125,13 @@ function getFarlistEndpoints(): EndpointInterface[] {
  * @returns the farlist endpoint
  */
 function makeFarlistEndpoint(listName: string, fid: number, username: string): EndpointInterface {
+  // todo: figure out how to handle this potential undefined
   return {
     id: idOf(listName),
     name: listName,
     url: `https://api.farcaster.xyz/v2/casts?fid=${fid}&includeDeletedCasts=false&limit=15`,
     type: 'merkle',
-    username: username
+    username: username,
   };
 }
 
@@ -228,12 +229,16 @@ function makeSearchcasterEndpoint(listName: string, query: string): EndpointInte
   };
 }
 
-
 /**
- * this is the endpoint for fetching the home page
- * on development environment, returns the most upvoted casts as feed
- * the feed updates infrequently, means less novelty, good for 
- * development purposes, the "Dev" feed should be purged on production
+ * endpoint to fetch home feed (/)
+ * 
+ * it is extremely distracting to have real feed when developing, on
+ * dev environment, use the most liked cast instead of "hot 24h" casts,
+ * the most liked cast has slow velocity, which means less novelty,
+ * which means less distraction
+ * 
+ * @param isProd whether environment is on prod (import.meta.env.PROD)
+ * @returns endpoint to fetch home feed
  */
 export function getHomeEndpoints(isProd: boolean): EndpointInterface[] {
   if (isProd) {
