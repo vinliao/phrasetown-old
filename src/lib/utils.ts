@@ -358,13 +358,6 @@ function sortCasts(casts: CastInterface[]): CastInterface[] {
   return orderBy(casts, 'timestamp', 'desc');
 }
 
-/**
- * =========================
- * code below this line
- * has not been refactored
- * =========================
- */
-
 function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
   const parent = (cast.parentAuthor && cast.parentHash) ? { username: cast.parentAuthor.username, hash: cast.parentHash } : undefined;
   const recasted = ('recast' in cast && typeof recaster === 'string') ? { username: recaster } : undefined;
@@ -434,6 +427,13 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
 }
 
 /**
+ * =========================
+ * code below this line
+ * has not been refactored
+ * =========================
+ */
+
+/**
  * todo
  * 
  * @param data 
@@ -494,6 +494,13 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
   // todo: handle error
 }
 
+// todo: handle cursor
+function getUrl(url: string, nextPage?: number, cursor?: string) {
+  if (nextPage) return `${url}?page=${nextPage}`;
+  else if (cursor) return `${url}&cursor=${cursor}`;
+  else return url;
+}
+
 /**
  * fetch endpoints, extract the casts, clean casts, returns it,
  * and also returns the updated endpoints (fetch next page)
@@ -507,113 +514,87 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
   Promise<{ casts: CastInterface[], endpoints: EndpointInterface[]; }> {
   let casts: CastInterface[] = [];
   let endpointWithNext: EndpointInterface[] = [];
-  let hubKey = import.meta.env.VITE_HUB_KEY;
-  if (userHubKey) hubKey = userHubKey;
+  const hubKey = userHubKey ? userHubKey : import.meta.env.VITE_HUB_KEY;
 
   await Promise.all(
     endpoints.map(async endpoint => {
-      try {
-        let finalUrl = endpoint.url;
-        if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
-          finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
-          const response = await fetch(finalUrl);
-          const data: SearchcasterApiResponse = await response.json();
+      if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
+        // this errors out becuase it could be undefined
+        const response = await fetch(getUrl(endpoint.url, endpoint.nextPage));
+        const data: SearchcasterApiResponse = await response.json();
 
-          // update nextPage
-          const nextPage = endpoint.nextPage;
+        // update nextPage
+        const nextPage = endpoint.nextPage;
+        let newEndpoint = endpoint;
+        newEndpoint.nextPage = nextPage + 1;
+        endpointWithNext.push(newEndpoint);
+
+        // append the casts
+        casts = [...casts, ...transformCasts(data.casts, endpoint.type)];
+
+      }
+      else if (endpoint.type == 'merkleUser') {
+        console.log('using the new getUrl');
+        const response = await fetch(getUrl(endpoint.url, undefined, endpoint.cursor), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${hubKey}`
+          },
+        });
+
+        let data: MerkleApiResponse = await response.json();
+
+        // update cursor
+        try {
           let newEndpoint = endpoint;
-          newEndpoint.nextPage = nextPage + 1;
+          const nextCursor = data.next.cursor;
+          if (nextCursor) newEndpoint.cursor = data.next.cursor;
           endpointWithNext.push(newEndpoint);
-
-          // append the casts
-          casts = [...casts, ...transformCasts(data.casts, 'searchcaster')];
-
-        }
-        else if (endpoint.type == 'merkleUser') {
-          if (endpoint.cursor) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
-          const response = await fetch(finalUrl, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${hubKey}`
-            },
-          });
-
-          let data: MerkleApiResponse = await response.json();
-
-          // update cursor
-          try {
-            let newEndpoint = endpoint;
-            const nextCursor = data.next.cursor;
-            if (nextCursor) newEndpoint.cursor = data.next.cursor;
-            endpointWithNext.push(newEndpoint);
-          } catch {
-            // cursor doesn't exist
-            // it means user hasn't posted much
-            console.log('cursor does not exist');
-            endpointWithNext.push(endpoint);
-          }
-
-          casts = [...casts, ...transformCasts(data.result.casts, 'merkleUser', endpoint.username)];
+        } catch {
+          // cursor doesn't exist
+          // it means user hasn't posted much
+          console.log('cursor does not exist');
+          endpointWithNext.push(endpoint);
         }
 
-        else if (endpoint.type == 'merkleNotification') {
-          if (endpoint.cursor) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
-          const response = await fetch(finalUrl, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${hubKey}`
-            },
-          });
+        casts = [...casts, ...transformCasts(data.result.casts, 'merkleUser', endpoint.username)];
+      }
 
-          let data: MerkleNotificationApiResponse = await response.json();
-          let rawCasts: MerkleNotificationCast[] = [];
-          if ("notifications" in data.result) {
-            const notifications = data.result.notifications;
-            for (const key in notifications) {
-              if (notifications[key].type == 'cast-reply' || notifications[key].type == 'cast-mention') {
-                rawCasts.push(notifications[key].content.cast);
-              }
+      else if (endpoint.type == 'merkleNotification') {
+        const response = await fetch(getUrl(endpoint.url, undefined, endpoint.cursor), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${hubKey}`
+          },
+        });
+
+        let data: MerkleNotificationApiResponse = await response.json();
+        let rawCasts: MerkleNotificationCast[] = [];
+        if ("notifications" in data.result) {
+          const notifications = data.result.notifications;
+          for (const key in notifications) {
+            if (notifications[key].type == 'cast-reply' || notifications[key].type == 'cast-mention') {
+              rawCasts.push(notifications[key].content.cast);
             }
           }
-
-          // update cursor
-          try {
-            let newEndpoint = endpoint;
-            const nextCursor = data.next.cursor;
-            if (nextCursor) newEndpoint.cursor = data.next.cursor;
-            endpointWithNext.push(newEndpoint);
-          } catch {
-            // cursor doesn't exist
-            // it means user hasn't posted much
-            console.log('cursor does not exist');
-            endpointWithNext.push(endpoint);
-          }
-
-          casts = [...casts, ...transformCasts(rawCasts, 'merkleNotification', endpoint.username)];
         }
 
-        /**
-         * it works somewhat but still buggy as hell
-         */
-        // else if (endpoint.type == 'perl' && endpoint.nextPage) {
-        //   if (endpoint.nextPage > 0) finalUrl = finalUrl + `&page=${endpoint.nextPage}`;
+        // update cursor
+        try {
+          let newEndpoint = endpoint;
+          const nextCursor = data.next.cursor;
+          if (nextCursor) newEndpoint.cursor = data.next.cursor;
+          endpointWithNext.push(newEndpoint);
+        } catch {
+          // cursor doesn't exist
+          // it means user hasn't posted much
+          console.log('cursor does not exist');
+          endpointWithNext.push(endpoint);
+        }
 
-        //   const response = await fetch(finalUrl);
-        //   const data: PerlApiResponse = await response.json();
-
-        //   // update nextPage
-        //   const nextPage = endpoint.nextPage;
-        //   let newEndpoint = endpoint;
-        //   newEndpoint.nextPage = nextPage + 1;
-        //   endpointWithNext.push(newEndpoint);
-
-        //   // append the casts
-        //   casts = [...casts, ...transformCasts(data, 'perl')];
-        // }
-
-      } catch (e) {
-        console.error(e);
+        casts = [...casts, ...transformCasts(rawCasts, 'merkleNotification', endpoint.username)];
       }
+
     })
   );
 
