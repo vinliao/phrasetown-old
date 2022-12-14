@@ -219,6 +219,11 @@ function getSearchcasterEndpoints(): EndpointInterface[] {
     .flat(1);
 }
 
+/**
+ * @param listName name of endpoint
+ * @param query the search term
+ * @returns the searchcaster endpoint
+ */
 function makeSearchcasterEndpoint(listName: string, query: string): EndpointInterface {
   return {
     id: idOf(listName),
@@ -315,8 +320,7 @@ export function linkify(text: string): string {
     },
   };
 
-  const rawHtml = linkifyHtml(text, linkifyOption);
-  return sanitizeHtml(rawHtml);
+  return sanitizeHtml(linkifyHtml(text, linkifyOption));
 }
 
 /**
