@@ -98,21 +98,24 @@ function getFarlistEndpoints(): EndpointInterface[] {
     }
   ];
 
-  let listEndpoint: EndpointInterface[] = [];
-
-  farlist.forEach(list => {
-    list.users.forEach(user => {
-      listEndpoint.push({
-        id: idOf(list.name),
-        name: list.name,
-        url: `https://api.farcaster.xyz/v2/casts?fid=${user.fid}&includeDeletedCasts=false&limit=15`,
-        type: 'merkle',
-        username: user.username
+  // loop through farlist, turn it into endpoint, flatten array to 1d
+  return farlist
+    .map((list) => {
+      return list.users.map(user => {
+        return makeFarlistEndpoints(list.name, user.fid, user.username);
       });
-    });
-  });
+    })
+    .flat(1);
+}
 
-  return listEndpoint;
+function makeFarlistEndpoints(listName: string, fid: number, username: string): EndpointInterface {
+  return {
+    id: idOf(listName),
+    name: listName,
+    url: `https://api.farcaster.xyz/v2/casts?fid=${fid}&includeDeletedCasts=false&limit=15`,
+    type: 'merkle',
+    username: username
+  };
 }
 
 /**
@@ -140,6 +143,7 @@ function getNewEndpoints(): EndpointInterface[] {
  * 
  * @returns return all endpoint-to-id mapping
  */
+// todo: remove export later, experimentation purposes
 function getEndpointIdNameMapping() {
   return [
     { name: 'New', id: 'GK-rQ3w0s41xcTeRwVXgw' },
