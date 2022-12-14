@@ -494,11 +494,17 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
   // todo: handle error
 }
 
-// todo: handle cursor
 function getUrl(url: string, nextPage?: number, cursor?: string) {
-  if (nextPage) return `${url}?page=${nextPage}`;
+  if (nextPage) return `${url}&page=${nextPage}`;
   else if (cursor) return `${url}&cursor=${cursor}`;
-  else return url;
+  return url;
+}
+
+// logic untested
+function updateNextPage(endpoint: EndpointInterface, cursor?: string) {
+  if (cursor) return { ...endpoint, cursor };
+  else if (endpoint.nextPage) return { ...endpoint, nextPage: endpoint.nextPage++ };
+  return endpoint;
 }
 
 /**
@@ -519,22 +525,16 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
   await Promise.all(
     endpoints.map(async endpoint => {
       if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
-        // this errors out becuase it could be undefined
         const response = await fetch(getUrl(endpoint.url, endpoint.nextPage));
         const data: SearchcasterApiResponse = await response.json();
 
-        // update nextPage
-        const nextPage = endpoint.nextPage;
-        let newEndpoint = endpoint;
-        newEndpoint.nextPage = nextPage + 1;
-        endpointWithNext.push(newEndpoint);
+        endpointWithNext.push(updateNextPage(endpoint));
 
         // append the casts
         casts = [...casts, ...transformCasts(data.casts, endpoint.type)];
 
       }
       else if (endpoint.type == 'merkleUser') {
-        console.log('using the new getUrl');
         const response = await fetch(getUrl(endpoint.url, undefined, endpoint.cursor), {
           headers: {
             'Content-Type': 'application/json',
@@ -544,18 +544,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
 
         let data: MerkleApiResponse = await response.json();
 
-        // update cursor
-        try {
-          let newEndpoint = endpoint;
-          const nextCursor = data.next.cursor;
-          if (nextCursor) newEndpoint.cursor = data.next.cursor;
-          endpointWithNext.push(newEndpoint);
-        } catch {
-          // cursor doesn't exist
-          // it means user hasn't posted much
-          console.log('cursor does not exist');
-          endpointWithNext.push(endpoint);
-        }
+        endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
 
         casts = [...casts, ...transformCasts(data.result.casts, 'merkleUser', endpoint.username)];
       }
@@ -579,18 +568,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
           }
         }
 
-        // update cursor
-        try {
-          let newEndpoint = endpoint;
-          const nextCursor = data.next.cursor;
-          if (nextCursor) newEndpoint.cursor = data.next.cursor;
-          endpointWithNext.push(newEndpoint);
-        } catch {
-          // cursor doesn't exist
-          // it means user hasn't posted much
-          console.log('cursor does not exist');
-          endpointWithNext.push(endpoint);
-        }
+        endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
 
         casts = [...casts, ...transformCasts(rawCasts, 'merkleNotification', endpoint.username)];
       }
