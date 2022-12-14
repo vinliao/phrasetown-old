@@ -544,9 +544,11 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
 
         let data: MerkleApiResponse = await response.json();
 
-        endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
+        // only update cursor if it exist
+        if ('next' in data) endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
+        else endpointWithNext.push(endpoint);
 
-        casts = [...casts, ...transformCasts(data.result.casts, 'merkleUser', endpoint.username)];
+        casts = [...casts, ...transformCasts(data.result.casts, endpoint.type, endpoint.username)];
       }
 
       else if (endpoint.type == 'merkleNotification') {
@@ -568,9 +570,11 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
           }
         }
 
-        endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
+        // only update cursor if it exist
+        if ('next' in data) endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
+        else endpointWithNext.push(endpoint);
 
-        casts = [...casts, ...transformCasts(rawCasts, 'merkleNotification', endpoint.username)];
+        casts = [...casts, ...transformCasts(rawCasts, endpoint.type, endpoint.username)];
       }
 
     })
