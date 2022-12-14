@@ -1,3 +1,15 @@
+/**
+ * CORE CONCEPT:
+ * 
+ * cast is a piece of message in the farcaster network (who says
+ * what at what time)
+ * 
+ * endpoint is the information to get casts (url, pagination)
+ * 
+ * feed is an array of cast and an array of endpoint, array of endpoint
+ * means the feed's casts can be taken from multiple sources
+ */
+
 export interface CastInterface {
   author: {
     username: string,
