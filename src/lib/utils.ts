@@ -102,13 +102,13 @@ function getFarlistEndpoints(): EndpointInterface[] {
   return farlist
     .map((list) => {
       return list.users.map(user => {
-        return makeFarlistEndpoints(list.name, user.fid, user.username);
+        return makeFarlistEndpoint(list.name, user.fid, user.username);
       });
     })
     .flat(1);
 }
 
-function makeFarlistEndpoints(listName: string, fid: number, username: string): EndpointInterface {
+function makeFarlistEndpoint(listName: string, fid: number, username: string): EndpointInterface {
   return {
     id: idOf(listName),
     name: listName,
@@ -143,7 +143,6 @@ function getNewEndpoints(): EndpointInterface[] {
  * 
  * @returns return all endpoint-to-id mapping
  */
-// todo: remove export later, experimentation purposes
 function getEndpointIdNameMapping() {
   return [
     { name: 'New', id: 'GK-rQ3w0s41xcTeRwVXgw' },
@@ -161,6 +160,10 @@ function getEndpointIdNameMapping() {
   ];
 }
 
+/**
+ * @param name name of endpoint
+ * @returns the id of endpoint
+ */
 function idOf(name: string): string | undefined {
   const mapping = getEndpointIdNameMapping().find((mapping) => mapping.name === name);
   return mapping ? mapping.id : undefined;
