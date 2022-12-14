@@ -365,214 +365,6 @@ function sortCasts(casts: CastInterface[]): CastInterface[] {
  * =========================
  */
 
-/**
- * @param data api response from merkle's api endpint
- * @returns array of casts, ready to be displayed
- */
-function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInterface[] {
-  let result: CastInterface[] = [];
-  data.result.casts.forEach((cast: MerkleCast) => {
-    try {
-      let parent;
-
-      // type error here
-      if (cast.parentAuthor && cast.parentHash) {
-        parent = {
-          username: cast.parentAuthor.username,
-          hash: cast.parentHash
-        };
-      }
-
-      // note: mention cast has no "recast" field
-      let recasted;
-      if ('recast' in cast && typeof recaster === 'string') {
-        recasted = {
-          username: recaster,
-        };
-      }
-
-      let image;
-      if (cast.attachments && cast.attachments.openGraph.length > 0) {
-        // if there's image attached to cast
-        image = getImageLink(cast.attachments.openGraph[0]);
-      }
-
-      result.push({
-        author: {
-          username: cast.author.username,
-          displayName: cast.author.displayName,
-          pfp: cast.author.pfp.url,
-          fid: cast.author.fid
-        },
-        parent,
-        recasted,
-        hash: cast.hash,
-        text: linkify(cast.text),
-        image,
-        timestamp: cast.timestamp,
-        likes: cast.reactions.count,
-        replies: cast.replies.count,
-        recasts: cast.recasts.count,
-      });
-
-
-    } catch (e) {
-      // if type wrong, don't push the cast, and don't brick the entire app
-      console.error(e);
-    }
-  });
-
-  return result;
-}
-
-/**
- * @param data api response from merkle's notification api endpint
- * @returns array of casts, ready to be displayed
- */
-function processMerkleNotification(data: MerkleNotificationCast[], recaster?: string): CastInterface[] {
-  let result: CastInterface[] = [];
-  data.forEach((cast: MerkleNotificationCast) => {
-    try {
-      let parent;
-
-      // type error here
-      if (cast.parentAuthor && cast.parentHash) {
-        parent = {
-          username: cast.parentAuthor.username,
-          hash: cast.parentHash
-        };
-      }
-
-      // note: mention cast has no "recast" field
-      let recasted;
-      if ('recast' in cast && typeof recaster === 'string') {
-        recasted = {
-          username: recaster,
-        };
-      }
-
-      let image;
-      if (cast.attachments && cast.attachments.openGraph.length > 0) {
-        // if there's image attached to cast
-        image = getImageLink(cast.attachments.openGraph[0]);
-      }
-
-      result.push({
-        author: {
-          username: cast.author.username,
-          displayName: cast.author.displayName,
-          pfp: cast.author.pfp.url,
-          fid: cast.author.fid
-        },
-        parent,
-        recasted,
-        hash: cast.hash,
-        text: linkify(cast.text),
-        image,
-        timestamp: cast.timestamp,
-        likes: cast.reactions.count,
-        replies: cast.replies.count,
-        recasts: cast.recasts.count,
-      });
-
-
-    } catch (e) {
-      // if type wrong, don't push the cast, and don't brick the entire app
-      console.error(e);
-    }
-  });
-
-  return result;
-}
-
-/**
- * @param data api response from searchcaster endpoint
- * @returns array of casts, ready to be displayed
- */
-function processSearchcasterCasts(data: SearchcasterApiResponse): CastInterface[] {
-  let result: CastInterface[] = [];
-
-  data.casts.forEach((cast: SearchcasterCast) => {
-    try {
-      let parent;
-      if (typeof cast.body.data.replyParentMerkleRoot === "string" && typeof cast.meta.replyParentUsername.username === "string") {
-        parent = {
-          hash: cast.body.data.replyParentMerkleRoot,
-          username: cast.meta.replyParentUsername.username,
-        };
-      }
-
-      // recasted is always undefined
-      let recasted;
-
-      result.push({
-        author: {
-          username: cast.body.username,
-          pfp: cast.meta.avatar,
-          displayName: cast.meta.displayName,
-        },
-        parent,
-        recasted,
-        text: linkify(cast.body.data.text),
-        image: cast.body.data.image,
-        timestamp: cast.body.publishedAt,
-        likes: cast.meta.reactions.count,
-        recasts: cast.meta.recasts.count,
-        replies: cast.meta.numReplyChildren,
-        hash: cast.merkleRoot,
-      });
-
-    } catch (e) {
-      // if type wrong, don't push the cast, and don't brick the entire app
-      console.error(e);
-    }
-  });
-
-  return result;
-}
-
-/**
- * @param data api response from merkle's api endpint
- * @returns array of casts, ready to be displayed
- */
-function processPerlCasts(data: PerlApiResponse): CastInterface[] {
-  let result: CastInterface[] = [];
-  data.forEach((cast: PerlCast) => {
-    try {
-      let image;
-      if (cast.payload.attachments && cast.payload.attachments.openGraph.length > 0) {
-        // if there's image attached to cast
-        image = getImageLink(cast.payload.attachments.openGraph[0]);
-      }
-
-      result.push({
-        author: {
-          username: cast.payload.body.username,
-          displayName: cast.payload.meta.displayName,
-          pfp: cast.payload.meta.avatar,
-          fid: cast.payload.body.fid
-        },
-        parent: undefined,
-        recasted: undefined,
-        hash: cast.payload.merkleRoot,
-        text: linkify(cast.payload.body.data.text),
-        image,
-        timestamp: cast.payload.body.publishedAt,
-        likes: cast.payload.meta.reactions.count,
-        recasts: cast.payload.meta.recasts.count,
-        replies: cast.payload.meta.numReplyChildren,
-      });
-
-
-    } catch (e) {
-      // if type wrong, don't push the cast, and don't brick the entire app
-      console.error(e);
-    }
-  });
-
-  return result;
-}
-
 function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
   const parent = (cast.parentAuthor && cast.parentHash) ? { username: cast.parentAuthor.username, hash: cast.parentHash } : undefined;
   const recasted = ('recast' in cast && typeof recaster === 'string') ? { username: recaster } : undefined;
@@ -598,7 +390,11 @@ function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface
 }
 
 function transformSearchcasterCast(cast: SearchcasterCast) {
-  const parent = (typeof cast.body.data.replyParentMerkleRoot === 'string' && typeof cast.meta.replyParentUsername.username === 'string') ? { hash: cast.body.data.replyParentMerkleRoot, username: cast.meta.replyParentUsername.username } : undefined;
+  const parent = (typeof cast.body.data.replyParentMerkleRoot === 'string' &&
+    typeof cast.meta.replyParentUsername.username === 'string')
+
+    ? { hash: cast.body.data.replyParentMerkleRoot, username: cast.meta.replyParentUsername.username }
+    : undefined;
 
   return {
     author: {
@@ -633,13 +429,6 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
   } else if (type == 'searchcaster') {
     return casts.map((cast: SearchcasterCast) => transformSearchcasterCast(cast));
   }
-  // else if (type == 'merkleNotification') {
-  //   return processMerkleNotification(data, recaster);
-  // } else if (type == 'searchcaster') {
-  //   return processSearchcasterCasts(data);
-  // } else if (type == 'perl') {
-  //   return processPerlCasts(data);
-  // }
 
   // todo: handle error
 }
@@ -764,7 +553,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
             endpointWithNext.push(endpoint);
           }
 
-          casts = [...casts, ...transformCasts(data, 'merkleUser', endpoint.username)];
+          casts = [...casts, ...transformCasts(data.result.casts, 'merkleUser', endpoint.username)];
         }
 
         else if (endpoint.type == 'merkleNotification') {
