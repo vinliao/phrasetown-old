@@ -2,7 +2,7 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { orderBy } from 'lodash-es';
+import { get, orderBy } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
@@ -11,16 +11,12 @@ import type { CastArray as PerlApiResponse, Cast as PerlCast } from '$lib/types/
 import * as timeago from 'timeago.js';
 
 /**
- * an endpoint is an object which contains all the information to fetch
- * casts, which is then turned into feed
+ * this function doesn't have params because it uses user's hub key,
+ * which is passed from frontend ($userHubKey store)
  * 
- * this function returns endpoints specifically for notification
- * 
- * @param fid connected user fid
- * @param username connected user username
- * @returns list of unfetched endpoints
+ * @returns mention endpoint
  */
-export function getNotificationEndpoints(): EndpointInterface[] {
+function getNotificationEndpoints(): EndpointInterface[] {
   return [
     {
       id: 'eVGJjvV-nABOx8dMqu9ZE',
@@ -32,12 +28,23 @@ export function getNotificationEndpoints(): EndpointInterface[] {
 }
 
 /**
- * an endpoint is an object which contains all the information to fetch
- * casts, which is then turned into feed
+ * @returns endpoint to fetch latest casts in the network
+ */
+function getNewEndpoints(): EndpointInterface[] {
+  return [
+    {
+      id: 'GK-rQ3w0s41xcTeRwVXgw',
+      name: 'New',
+      url: 'https://api.farcaster.xyz/v2/recent-casts',
+      type: 'merkle',
+    },
+  ];
+}
+
+/**
+ * farlist is farcaster list, think twitter list but farcaster
  * 
- * farlist is "twitter list but for farcaster users"
- * 
- * @returns list of unfetched endpoints
+ * @returns an array of farlist endpoints
  */
 function getFarlistEndpoints(): EndpointInterface[] {
   const farlist = [
@@ -98,7 +105,10 @@ function getFarlistEndpoints(): EndpointInterface[] {
     }
   ];
 
-  // loop through farlist, turn it into endpoint, flatten array to 1d
+  /**
+   * loop through farlist, turn it into endpoint, flatten array to 1d
+   * (the `.map()` returns a 2d array, because farlist is a 2d array)
+   */
   return farlist
     .map((list) => {
       return list.users.map(user => {
@@ -108,6 +118,12 @@ function getFarlistEndpoints(): EndpointInterface[] {
     .flat(1);
 }
 
+/**
+ * @param listName name of endpoint
+ * @param fid
+ * @param username used for "recasted by @handle" text
+ * @returns the farlist endpoint
+ */
 function makeFarlistEndpoint(listName: string, fid: number, username: string): EndpointInterface {
   return {
     id: idOf(listName),
@@ -119,25 +135,6 @@ function makeFarlistEndpoint(listName: string, fid: number, username: string): E
 }
 
 /**
- * an endpoint is an object which contains all the information to fetch
- * casts, which is then turned into columns
- * 
- * this endpoint is for fetching the recent cast in the network
- * 
- * @returns list of unfetched endpoints
- */
-function getNewEndpoints(): EndpointInterface[] {
-  return [
-    {
-      id: 'GK-rQ3w0s41xcTeRwVXgw',
-      name: 'New',
-      url: 'https://api.farcaster.xyz/v2/recent-casts',
-      type: 'merkle',
-    },
-  ];
-}
-
-/**
  * id here is generated with `npx nanoid`
  * nanoid docs: https://github.com/ai/nanoid
  * 
@@ -146,9 +143,8 @@ function getNewEndpoints(): EndpointInterface[] {
 function getEndpointIdNameMapping() {
   return [
     { name: 'New', id: 'GK-rQ3w0s41xcTeRwVXgw' },
-    { name: 'Mention', id: 'eVGJjvV-nABOx8dMqu9ZE' },
+    { name: 'Mentions', id: 'eVGJjvV-nABOx8dMqu9ZE' },
     { name: 'Home', id: 'REyJisAJvqk4-sjeB4tWW' },
-    { name: 'Dev', id: 'AaH8H3KduTTPVIdFFEqkR' },
     { name: 'Builders', id: 'ZQ_v4OlpAaRH6UJyB_ZsG' },
     { name: 'Interesting', id: 'rz_mqas0eC-yTTyA5CE_k' },
     { name: 'Interesting #2', id: 'wX7AVGycind3A6hX5gyFn' },
@@ -164,9 +160,38 @@ function getEndpointIdNameMapping() {
  * @param name name of endpoint
  * @returns the id of endpoint
  */
-function idOf(name: string): string | undefined {
+export function idOf(name: string): string | undefined {
   const mapping = getEndpointIdNameMapping().find((mapping) => mapping.name === name);
   return mapping ? mapping.id : undefined;
+}
+
+/**
+ * @returns all endpoints of the app
+ */
+function getAllEndpoints(): EndpointInterface[] {
+  return [
+    ...getNewEndpoints(),
+    ...getNotificationEndpoints(),
+    ...getFarlistEndpoints(),
+    ...getSearchcasterEndpoints(),
+    ...getHomeEndpoints(import.meta.env.PROD)
+  ];
+}
+
+/**
+ * @param id endpoint id, use idOf() to get it
+ * @returns endpoints with that id
+ */
+export function getEndpoints(id: string): EndpointInterface[] {
+  return getAllEndpoints().filter(endpoint => endpoint.id === id);
+}
+
+/**
+ * @param id array of endpoint id, use idOf() to get it
+ * @returns endpoints where those ids are filtered out
+ */
+export function getEndpointsWithout(id: string[]): EndpointInterface[] {
+  return getAllEndpoints().filter(endpoint => !id.includes(endpoint.id));
 }
 
 /**
@@ -177,61 +202,32 @@ function idOf(name: string): string | undefined {
  * 
  * @returns list of unfetched endpoints
  */
-function getOtherEndpoints(): EndpointInterface[] {
-  let listEndpoint: EndpointInterface[] = [];
-
+function getSearchcasterEndpoints(): EndpointInterface[] {
   const searchlist = [
-    { name: "?search=BTC&ETH", id: 'engxPcFaJ0WrtvbnGFoOX', searchTerms: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
-    { name: "?search=product", id: 'ESf-K7o8Nu7QmHTp6XLsr', searchTerms: ['product', 'startup'] },
+    { name: "?search=BTC&ETH", queries: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
+    { name: "?search=product", queries: ['product', 'startup'] },
+    { name: "?search=nouns", queries: ['nouns'] },
   ];
 
-  searchlist.forEach(search => {
-    search.searchTerms.forEach(term => {
-      listEndpoint.push({
-        id: search.id,
-        name: search.name,
-        url: `https://searchcaster.xyz/api/search?text=${term}&count=30`,
-        type: 'searchcaster',
-        nextPage: 1
+  return searchlist
+    .map((list) => {
+      return list.queries.map(query => {
+        return makeSearchcasterEndpoint(list.name, query);
       });
-    });
-  });
-
-  return [
-    /**
-     * todo: code to process perl is still buggy
-     */
-    // {
-    //   id: 'K7S4kH22qNGuZ_dlLQVEz',
-    //   name: 'Perl',
-    //   url: 'https://api.perl.xyz/shuffled-perls',
-    //   type: 'perl',
-    //   nextPage: 1
-    // },
-    {
-      id: 'i4HKWuOsocVvY1y3-8gms',
-      name: '?search=nouns',
-      url: 'https://searchcaster.xyz/api/search?text=nouns&count=30',
-      type: 'searchcaster',
-      nextPage: 1
-    },
-    ...listEndpoint
-  ];
+    })
+    .flat(1);
 }
 
-/**
- * @param id (optional) if not specified, return all endpoint
- * @returns 
- */
-export function getFeedEndpoints(id?: string) {
-  const allEndpoints = [...getNewEndpoints(), ...getFarlistEndpoints(), ...getOtherEndpoints(), ...getHomeEndpoints()];
-
-  if (id) {
-    return allEndpoints.filter(object => object.id === id);
-  }
-
-  return allEndpoints;
+function makeSearchcasterEndpoint(listName: string, query: string): EndpointInterface {
+  return {
+    id: idOf(listName),
+    name: listName,
+    url: `https://searchcaster.xyz/api/search?text=${query}&count=30`,
+    type: 'searchcaster',
+    nextPage: 1
+  };
 }
+
 
 /**
  * this is the endpoint for fetching the home page
@@ -239,19 +235,19 @@ export function getFeedEndpoints(id?: string) {
  * the feed updates infrequently, means less novelty, good for 
  * development purposes, the "Dev" feed should be purged on production
  */
-export function getHomeEndpoints(): EndpointInterface[] {
-  if (import.meta.env.PROD) {
+export function getHomeEndpoints(isProd: boolean): EndpointInterface[] {
+  if (isProd) {
     return [
       {
         id: 'REyJisAJvqk4-sjeB4tWW',
-        name: 'Hot',
+        name: 'Home',
         url: `https://searchcaster.xyz/api/search?count=35&engagement=reactions&after=${getUnixTimeMinusXHours(24)}`,
         type: 'searchcaster',
         nextPage: 1
       },
       {
         id: "REyJisAJvqk4-sjeB4tWW",
-        name: 'Hot',
+        name: 'Home',
         url: `https://searchcaster.xyz/api/search?count=15&engagement=replies&after=${getUnixTimeMinusXHours(6)}`,
         type: 'searchcaster',
         nextPage: 1
@@ -260,8 +256,8 @@ export function getHomeEndpoints(): EndpointInterface[] {
   } else {
     return [
       {
-        id: 'AaH8H3KduTTPVIdFFEqkR',
-        name: 'Dev',
+        id: 'REyJisAJvqk4-sjeB4tWW',
+        name: 'Home',
         url: 'https://searchcaster.xyz/api/search?count=50&engagement=reactions',
         type: 'searchcaster',
         nextPage: 1

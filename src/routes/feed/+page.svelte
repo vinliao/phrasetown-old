@@ -1,10 +1,10 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { fade } from 'svelte/transition';
-	import { getFeedEndpoints } from '$lib/utils';
+	import { getEndpointsWithout, idOf } from '$lib/utils';
 	import { groupBy } from 'lodash-es';
 
-	const allFeedEndpoints = getFeedEndpoints();
+	const allFeedEndpoints = getEndpointsWithout([idOf('Home'), idOf('Mentions'), idOf('New')]);
 	const groupedEndpoints = groupBy(allFeedEndpoints, 'id');
 </script>
 
@@ -19,7 +19,9 @@
 		<ul class="list-disc list-inside text-neutral-500">
 			{#each Object.entries(groupedEndpoints) as [key, value], index (key)}
 				<li>
-					<span class="text-neutral-500 hover:text-neutral-200 transition font-bold text-base md:text-lg">
+					<span
+						class="text-neutral-500 hover:text-neutral-200 transition font-bold text-base md:text-lg"
+					>
 						<a href={`/feed/${key}`}>{groupedEndpoints[key][0].name}</a>
 					</span>
 				</li>
