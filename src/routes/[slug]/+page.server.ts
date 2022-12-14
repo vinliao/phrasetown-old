@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { PageServerLoad } from '../../../.svelte-kit/types/src/routes/[slug]/$types';
 import type { Data as MerkleUserRoot } from '$lib/types/merkleUser';
-import { processCasts } from '$lib/utils';
+import { transformCasts } from '$lib/utils';
 import type { CastInterface } from '$lib/types';
 import type { Data, User } from '$lib/types/merkleUserByUsername';
 
@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params }) => {
     });
 
     const data: MerkleUserRoot = await response.json();
-    const casts: CastInterface[] = processCasts(data, 'merkle', user.username);
+    const casts: CastInterface[] = transformCasts(data.result.casts, 'merkleUser', user.username);
 
     // recast is top-level cast
     const topLevelCasts = casts.filter(cast => !cast.parent || cast.recasted);

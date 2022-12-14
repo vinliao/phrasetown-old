@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params }) => {
   if (data) return { casts: data.casts, endpoints: data.endpoints };
   else {
     console.log('have to fetch manually!');
-    const endpoints = getHomeEndpoints();
+    const endpoints = getHomeEndpoints(import.meta.env.PROD);
     const data = await fetchEndpoints(endpoints);
     await saveToUpstash(data);
     return { casts: data.casts, endpoints: data.endpoints };

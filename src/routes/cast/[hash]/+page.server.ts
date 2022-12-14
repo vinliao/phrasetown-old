@@ -54,7 +54,7 @@ function getAncestors(hash: string, data: Root): CastInterface[] {
   // this is not elegant, abstract this
   let processedCasts: CastInterface[] = [];
   ancestorChain.forEach(cast => {
-    let processedCast = processCast(cast, 'merkle');
+    let processedCast = processCast(cast, 'merkleUser');
     if (processedCast) {
       processedCast.parent = undefined;
       processedCasts.push(processedCast);
@@ -74,7 +74,7 @@ function getChildren(hash: string, data: Root) {
   const casts = data.result.casts.filter(cast => cast.parentHash === hash);
   let processedCasts: CastInterface[] = [];
   casts.forEach(cast => {
-    processedCasts.push(processCast(cast, 'merkle')!);
+    processedCasts.push(processCast(cast, 'merkleUser')!);
 
   });
   return processedCasts;

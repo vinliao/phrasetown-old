@@ -2,11 +2,11 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { get, orderBy } from 'lodash-es';
+import { get, orderBy, transform } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
-import type { Cast as MerkleNotification, Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
+import type { Cast as MerkleNotificationCast, Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
 import type { CastArray as PerlApiResponse, Cast as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
@@ -36,7 +36,7 @@ function getNewEndpoints(): EndpointInterface[] {
       id: 'GK-rQ3w0s41xcTeRwVXgw',
       name: 'New',
       url: 'https://api.farcaster.xyz/v2/recent-casts',
-      type: 'merkle',
+      type: 'merkleUser',
     },
   ];
 }
@@ -130,7 +130,7 @@ function makeFarlistEndpoint(listName: string, fid: number, username: string): E
     id: idOf(listName),
     name: listName,
     url: `https://api.farcaster.xyz/v2/casts?fid=${fid}&includeDeletedCasts=false&limit=15`,
-    type: 'merkle',
+    type: 'merkleUser',
     username: username,
   };
 }
@@ -350,6 +350,21 @@ export function getTimeago(timestamp: number): string {
   return timeago.format(timestamp, 'en-short').replace(' ago', '');
 }
 
+function removeDuplicate(casts: CastInterface[]): CastInterface[] {
+  return [...new Set(casts)];
+}
+
+function sortCasts(casts: CastInterface[]): CastInterface[] {
+  return orderBy(casts, 'timestamp', 'desc');
+}
+
+/**
+ * =========================
+ * code below this line
+ * has not been refactored
+ * =========================
+ */
+
 /**
  * @param data api response from merkle's api endpint
  * @returns array of casts, ready to be displayed
@@ -414,9 +429,9 @@ function processMerkleCasts(data: MerkleApiResponse, recaster?: string): CastInt
  * @param data api response from merkle's notification api endpint
  * @returns array of casts, ready to be displayed
  */
-function processMerkleNotification(data: MerkleNotification[], recaster?: string): CastInterface[] {
+function processMerkleNotification(data: MerkleNotificationCast[], recaster?: string): CastInterface[] {
   let result: CastInterface[] = [];
-  data.forEach((cast: MerkleNotification) => {
+  data.forEach((cast: MerkleNotificationCast) => {
     try {
       let parent;
 
@@ -558,6 +573,51 @@ function processPerlCasts(data: PerlApiResponse): CastInterface[] {
   return result;
 }
 
+function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
+  const parent = (cast.parentAuthor && cast.parentHash) ? { username: cast.parentAuthor.username, hash: cast.parentHash } : undefined;
+  const recasted = ('recast' in cast && typeof recaster === 'string') ? { username: recaster } : undefined;
+  const image = (cast.attachments && cast.attachments.openGraph.length > 0) ? getImageLink(cast.attachments.openGraph[0]) : undefined;
+
+  return {
+    author: {
+      username: cast.author.username,
+      displayName: cast.author.displayName,
+      pfp: cast.author.pfp.url,
+      fid: cast.author.fid
+    },
+    parent,
+    recasted,
+    hash: cast.hash,
+    text: linkify(cast.text),
+    image,
+    timestamp: cast.timestamp,
+    likes: cast.reactions.count,
+    replies: cast.replies.count,
+    recasts: cast.recasts.count,
+  };
+}
+
+function transformSearchcasterCast(cast: SearchcasterCast) {
+  const parent = (typeof cast.body.data.replyParentMerkleRoot === 'string' && typeof cast.meta.replyParentUsername.username === 'string') ? { hash: cast.body.data.replyParentMerkleRoot, username: cast.meta.replyParentUsername.username } : undefined;
+
+  return {
+    author: {
+      username: cast.body.username,
+      pfp: cast.meta.avatar,
+      displayName: cast.meta.displayName,
+    },
+    parent,
+    recasted: undefined,
+    text: linkify(cast.body.data.text),
+    image: cast.body.data.image,
+    timestamp: cast.body.publishedAt,
+    likes: cast.meta.reactions.count,
+    recasts: cast.meta.recasts.count,
+    replies: cast.meta.numReplyChildren,
+    hash: cast.merkleRoot,
+  };
+}
+
 /**
  * todo
  * 
@@ -566,17 +626,20 @@ function processPerlCasts(data: PerlApiResponse): CastInterface[] {
  * @param recaster 
  * @returns 
  */
-export function processCasts(data: any, type: string, recaster?: string): CastInterface[] {
-
-  if (type == 'merkle') {
-    return processMerkleCasts(data, recaster);
-  } else if (type == 'merkleNotification') {
-    return processMerkleNotification(data, recaster);
+export function transformCasts(casts: any, type: string, recaster?: string): CastInterface[] {
+  // todo: naming can be clarified
+  if (type == 'merkleUser' || type == 'merkleNotification') {
+    return casts.map((cast: MerkleCast) => transformMerkleCast(cast, recaster));
   } else if (type == 'searchcaster') {
-    return processSearchcasterCasts(data);
-  } else if (type == 'perl') {
-    return processPerlCasts(data);
+    return casts.map((cast: SearchcasterCast) => transformSearchcasterCast(cast));
   }
+  // else if (type == 'merkleNotification') {
+  //   return processMerkleNotification(data, recaster);
+  // } else if (type == 'searchcaster') {
+  //   return processSearchcasterCasts(data);
+  // } else if (type == 'perl') {
+  //   return processPerlCasts(data);
+  // }
 
   // todo: handle error
 }
@@ -642,14 +705,6 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
   // todo: handle error
 }
 
-function removeDuplicate(casts: CastInterface[]): CastInterface[] {
-  return [...new Set(casts)];
-}
-
-function sortCasts(casts: CastInterface[]): CastInterface[] {
-  return orderBy(casts, 'timestamp', 'desc');
-}
-
 /**
  * fetch endpoints, extract the casts, clean casts, returns it,
  * and also returns the updated endpoints (fetch next page)
@@ -682,10 +737,10 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
           endpointWithNext.push(newEndpoint);
 
           // append the casts
-          casts = [...casts, ...processCasts(data, 'searchcaster')];
+          casts = [...casts, ...transformCasts(data.casts, 'searchcaster')];
 
         }
-        else if (endpoint.type == 'merkle') {
+        else if (endpoint.type == 'merkleUser') {
           if (endpoint.cursor) finalUrl = finalUrl + `&cursor=${endpoint.cursor}`;
           const response = await fetch(finalUrl, {
             headers: {
@@ -709,7 +764,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
             endpointWithNext.push(endpoint);
           }
 
-          casts = [...casts, ...processCasts(data, 'merkle', endpoint.username)];
+          casts = [...casts, ...transformCasts(data, 'merkleUser', endpoint.username)];
         }
 
         else if (endpoint.type == 'merkleNotification') {
@@ -722,7 +777,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
           });
 
           let data: MerkleNotificationApiResponse = await response.json();
-          let rawCasts: MerkleNotification[] = [];
+          let rawCasts: MerkleNotificationCast[] = [];
           if ("notifications" in data.result) {
             const notifications = data.result.notifications;
             for (const key in notifications) {
@@ -745,7 +800,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
             endpointWithNext.push(endpoint);
           }
 
-          casts = [...casts, ...processCasts(rawCasts, 'merkleNotification', endpoint.username)];
+          casts = [...casts, ...transformCasts(rawCasts, 'merkleNotification', endpoint.username)];
         }
 
         /**
@@ -764,7 +819,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
         //   endpointWithNext.push(newEndpoint);
 
         //   // append the casts
-        //   casts = [...casts, ...processCasts(data, 'perl')];
+        //   casts = [...casts, ...transformCasts(data, 'perl')];
         // }
 
       } catch (e) {

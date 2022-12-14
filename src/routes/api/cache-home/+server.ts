@@ -6,7 +6,7 @@ import { getUpstashName } from '$lib/utils';
 
 export const POST: RequestHandler = async () => {
 
-  const endpoints = getHomeEndpoints();
+  const endpoints = getHomeEndpoints(import.meta.env.PROD);
   const data = await fetchEndpoints(endpoints);
 
   const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
