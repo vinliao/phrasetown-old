@@ -6,7 +6,10 @@
 	import { linkify } from '$lib/utils';
 
 	export let data: { user: User; topLevelCasts: CastInterface[]; replyCasts: CastInterface[] };
-	const { user, topLevelCasts, replyCasts } = data;
+	// const { user, topLevelCasts, replyCasts } = data;
+	$: user = data.user;
+	$: topLevelCasts = data.topLevelCasts;
+	$: replyCasts = data.replyCasts;
 
 	let currentDisplayIndex = 0;
 
