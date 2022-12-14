@@ -182,7 +182,7 @@ function getAllEndpoints(): EndpointInterface[] {
  * @param id endpoint id, use idOf() to get it
  * @returns endpoints with that id
  */
-export function getEndpoints(id: string): EndpointInterface[] {
+export function getEndpoints(id: string | undefined): EndpointInterface[] {
   return getAllEndpoints().filter(endpoint => endpoint.id === id);
 }
 
@@ -190,7 +190,7 @@ export function getEndpoints(id: string): EndpointInterface[] {
  * @param id array of endpoint id, use idOf() to get it
  * @returns endpoints where those ids are filtered out
  */
-export function getEndpointsWithout(id: string[]): EndpointInterface[] {
+export function getEndpointsWithout(id: (string | undefined)[]): EndpointInterface[] {
   return getAllEndpoints().filter(endpoint => !id.includes(endpoint.id));
 }
 

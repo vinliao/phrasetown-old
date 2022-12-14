@@ -1,11 +1,11 @@
 <script lang="ts">
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { fade } from 'svelte/transition';
-	import { getEndpointsWithout, idOf } from '$lib/utils';
+	import { getEndpointsWithout, idOf, getEndpoints } from '$lib/utils';
 	import { groupBy } from 'lodash-es';
 
-	const allFeedEndpoints = getEndpointsWithout([idOf('Home'), idOf('Mentions'), idOf('New')]);
-	const groupedEndpoints = groupBy(allFeedEndpoints, 'id');
+	const endpoints = getEndpointsWithout([idOf('Home'), idOf('Mentions'), idOf('New')]);
+	const groupedEndpoints = groupBy(endpoints, 'id');
 </script>
 
 <div class="bg-neutral-900" in:fade={{ duration: 200 }}>
