@@ -2,11 +2,11 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { get, orderBy, transform } from 'lodash-es';
+import { orderBy } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
-import type { Cast as MerkleNotificationCast, Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
+import type { Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
 import type { Root as PerlApiResponse, Root2 as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
@@ -477,7 +477,7 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
     return casts.map((cast: MerkleCast) => transformMerkleCast(cast, recaster));
   } else if (type == 'searchcaster') {
     return casts.map((cast: SearchcasterCast) => transformSearchcasterCast(cast));
-  } 
+  }
   // else if (type == 'perl') {
   //   return casts.map((cast: PerlCast) => transformPerlCast(cast));
   // }
@@ -697,4 +697,11 @@ export async function fetchMore(casts: CastInterface[], endpoints: EndpointInter
   if (newCasts) {
     return { casts: [...new Set([...casts, ...newCasts])], endpoints: data.endpoints };
   }
+}
+
+if (import.meta.vitest) {
+  const { it, expect } = import.meta.vitest;
+  it('returns the correct upstash database name', () => {
+    expect(getUpstashName().upstashColumnName).toBeTypeOf('string');
+  });
 }
