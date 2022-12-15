@@ -546,18 +546,21 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
   const data = await Promise.all(
     endpoints.map(async endpoint => {
       if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
-        const data: SearchcasterApiResponse = await fetchEndpoint(endpoint.url, endpoint.type, undefined, endpoint.nextPage);
+        const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, undefined, endpoint.nextPage);
+        const data: SearchcasterApiResponse = await fetchFunction;
         return { casts: transformCasts(data.casts, endpoint.type), endpoints: updateNextPage(endpoint) };
       }
       else if (endpoint.type == 'merkleUser') {
-        const data: MerkleApiResponse = await fetchEndpoint(endpoint.url, endpoint.type, hubKey, undefined, endpoint.cursor);
+        const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, hubKey, undefined, endpoint.cursor);
+        const data: MerkleApiResponse = await fetchFunction;
         return {
           casts: transformCasts(data.result.casts, endpoint.type, endpoint.username),
           endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
         };
       }
       else if (endpoint.type == 'merkleNotification') {
-        const data: MerkleNotificationApiResponse = await fetchEndpoint(endpoint.url, endpoint.type, hubKey, undefined, endpoint.cursor);
+        const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, hubKey, undefined, endpoint.cursor);
+        const data: MerkleNotificationApiResponse = await fetchFunction;
         let rawCasts: MerkleNotificationCast[] = [];
 
         // todo: use filter()
