@@ -36,6 +36,11 @@ async function getReplies(hash: string): Promise<Root> {
 /**
  * given a hash, get the chains of cast from it to the root (thread)
  * 
+ * bug: the /v2/all-casts-in-thread only returns a certain amount of cast
+ * (maybe a hundred), and if the casts aren't included in the one hundred
+ * cast returned by it, the getAncestors return an empty array, which
+ * breaks the front-end
+ * 
  * @param hash the cast hash
  * @param data the return of getReplies()
  * @returns an array of cast, where each index is the parent of the previous index
