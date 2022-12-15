@@ -2,7 +2,7 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { get, orderBy, transform } from 'lodash-es';
+import { orderBy } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
@@ -518,21 +518,15 @@ function updateNextPage(endpoint: EndpointInterface, cursor?: string) {
  */
 export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?: string):
   Promise<{ casts: CastInterface[], endpoints: EndpointInterface[]; }> {
-  let casts: CastInterface[] = [];
-  let endpointWithNext: EndpointInterface[] = [];
   const hubKey = userHubKey ? userHubKey : import.meta.env.VITE_HUB_KEY;
 
-  await Promise.all(
+  const data = await Promise.all(
     endpoints.map(async endpoint => {
       if (endpoint.type == 'searchcaster' && endpoint.nextPage) {
         const response = await fetch(getUrl(endpoint.url, endpoint.nextPage));
         const data: SearchcasterApiResponse = await response.json();
 
-        endpointWithNext.push(updateNextPage(endpoint));
-
-        // append the casts
-        casts = [...casts, ...transformCasts(data.casts, endpoint.type)];
-
+        return { casts: transformCasts(data.casts, endpoint.type), endpoints: updateNextPage(endpoint) };
       }
       else if (endpoint.type == 'merkleUser') {
         const response = await fetch(getUrl(endpoint.url, undefined, endpoint.cursor), {
@@ -544,11 +538,10 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
 
         let data: MerkleApiResponse = await response.json();
 
-        // only update cursor if it exist
-        if ('next' in data) endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
-        else endpointWithNext.push(endpoint);
-
-        casts = [...casts, ...transformCasts(data.result.casts, endpoint.type, endpoint.username)];
+        return {
+          casts: transformCasts(data.result.casts, endpoint.type, endpoint.username),
+          endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
+        };
       }
 
       else if (endpoint.type == 'merkleNotification') {
@@ -561,6 +554,8 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
 
         let data: MerkleNotificationApiResponse = await response.json();
         let rawCasts: MerkleNotificationCast[] = [];
+
+        // todo: use filter()
         if ("notifications" in data.result) {
           const notifications = data.result.notifications;
           for (const key in notifications) {
@@ -570,17 +565,25 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
           }
         }
 
-        // only update cursor if it exist
-        if ('next' in data) endpointWithNext.push(updateNextPage(endpoint, data.next.cursor));
-        else endpointWithNext.push(endpoint);
-
-        casts = [...casts, ...transformCasts(rawCasts, endpoint.type, endpoint.username)];
+        return {
+          casts: transformCasts(rawCasts, endpoint.type, endpoint.username),
+          endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
+        };
       }
 
     })
   );
 
-  return { casts: sortCasts(removeDuplicate(casts)), endpoints: endpointWithNext };
+  const casts = data.map(feed => feed?.casts).flat(1);
+
+  return {
+    casts: sortCasts(removeDuplicate(removeUndefined(casts))),
+    endpoints: removeUndefined(data.map(feed => feed?.endpoints))
+  };
+}
+
+function removeUndefined(arr: (any | undefined)[]): any[] {
+  return arr.filter(value => value !== undefined);
 }
 
 /**
