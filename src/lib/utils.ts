@@ -2,12 +2,12 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { orderBy } from 'lodash-es';
+import { get, orderBy, transform } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
 import type { Cast as MerkleNotificationCast, Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
-import type { CastArray as PerlApiResponse, Cast as PerlCast } from '$lib/types/perl';
+import type { Root as PerlApiResponse, Root2 as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
 /**
@@ -19,7 +19,7 @@ import * as timeago from 'timeago.js';
 function getNotificationEndpoints(): EndpointInterface[] {
   return [
     {
-      id: 'eVGJjvV-nABOx8dMqu9ZE',
+      id: idOf('Mentions'),
       name: 'Mentions',
       url: 'https://api.farcaster.xyz/v2/mention-and-reply-notifications',
       type: 'merkleNotification',
@@ -33,10 +33,25 @@ function getNotificationEndpoints(): EndpointInterface[] {
 function getNewEndpoints(): EndpointInterface[] {
   return [
     {
-      id: 'GK-rQ3w0s41xcTeRwVXgw',
+      id: idOf('New'),
       name: 'New',
       url: 'https://api.farcaster.xyz/v2/recent-casts',
       type: 'merkleUser',
+    },
+  ];
+}
+
+/**
+ * @returns endpoint to fetch random perls
+ */
+function getPerlEndpoints(): EndpointInterface[] {
+  return [
+    {
+      id: idOf('Perl'),
+      name: 'Perl',
+      url: 'https://api.perl.xyz/shuffled-perls',
+      type: 'perl',
+      nextPage: 1
     },
   ];
 }
@@ -154,6 +169,7 @@ function getEndpointIdNameMapping() {
     { name: '?search=BTC&ETH', id: 'engxPcFaJ0WrtvbnGFoOX' },
     { name: '?search=product', id: 'ESf-K7o8Nu7QmHTp6XLsr' },
     { name: '?search=nouns', id: 'i4HKWuOsocVvY1y3-8gms' },
+    { name: 'Perl', id: 'BCZ6RMlaGNa-dF6eD_FW4' },
   ];
 }
 
@@ -175,6 +191,7 @@ function getAllEndpoints(): EndpointInterface[] {
     ...getNotificationEndpoints(),
     ...getFarlistEndpoints(),
     ...getSearchcasterEndpoints(),
+    // ...getPerlEndpoints(),
     ...getHomeEndpoints(import.meta.env.PROD)
   ];
 }
@@ -358,6 +375,12 @@ function sortCasts(casts: CastInterface[]): CastInterface[] {
   return orderBy(casts, 'timestamp', 'desc');
 }
 
+/**
+ * 
+ * @param cast cast from merkle's api
+ * @param recaster useful for "recasted by @handlename" text
+ * @returns CastInterface
+ */
 function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
   const parent = (cast.parentAuthor && cast.parentHash) ? { username: cast.parentAuthor.username, hash: cast.parentHash } : undefined;
   const recasted = ('recast' in cast && typeof recaster === 'string') ? { username: recaster } : undefined;
@@ -382,7 +405,12 @@ function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface
   };
 }
 
-function transformSearchcasterCast(cast: SearchcasterCast) {
+/**
+ * 
+ * @param cast cast from Searchcaster
+ * @returns CastInterface
+ */
+function transformSearchcasterCast(cast: SearchcasterCast): CastInterface {
   const parent = (typeof cast.body.data.replyParentMerkleRoot === 'string' &&
     typeof cast.meta.replyParentUsername.username === 'string')
 
@@ -407,6 +435,34 @@ function transformSearchcasterCast(cast: SearchcasterCast) {
   };
 }
 
+// /**
+//  * 
+//  * @param cast cast from perl
+//  * @returns CastInterface
+//  */
+// function transformPerlCast(cast: PerlCast): CastInterface {
+//   const image = (cast.payload.attachments?.openGraph) ? getImageLink(cast.payload.attachments.openGraph[0]) : undefined;
+
+//   return {
+//     author: {
+//       username: cast.payload.author?.username,
+//       displayName: cast.payload.author?.displayName,
+//       pfp: cast.payload.author?.pfp.url,
+//       fid: cast.payload.author?.fid
+//     },
+//     parent: undefined,
+//     recasted: undefined,
+//     hash: cast.payload.merkleRoot,
+//     // text: linkify(cast.payload.text),
+//     text: cast.payload.text,
+//     image,
+//     timestamp: cast.payload.timestamp,
+//     likes: cast.payload.meta?.reactions.count,
+//     recasts: cast.payload.meta?.recasts.count,
+//     replies: cast.payload.meta?.numReplyChildren,
+//   };
+// }
+
 /**
  * todo
  * 
@@ -421,17 +477,13 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
     return casts.map((cast: MerkleCast) => transformMerkleCast(cast, recaster));
   } else if (type == 'searchcaster') {
     return casts.map((cast: SearchcasterCast) => transformSearchcasterCast(cast));
-  }
+  } 
+  // else if (type == 'perl') {
+  //   return casts.map((cast: PerlCast) => transformPerlCast(cast));
+  // }
 
   // todo: handle error
 }
-
-/**
- * =========================
- * code below this line
- * has not been refactored
- * =========================
- */
 
 /**
  * todo
@@ -494,9 +546,10 @@ export function processCast(cast: any, recaster?: string): CastInterface | undef
   // todo: handle error
 }
 
-function getUrl(url: string, nextPage?: number, cursor?: string) {
-  if (nextPage) return `${url}&page=${nextPage}`;
-  else if (cursor) return `${url}&cursor=${cursor}`;
+function getUrl(url: string, withAmpersand = true, nextPage?: number, cursor?: string) {
+  const ampersandOrQuestion = withAmpersand ? '&' : '?';
+  if (nextPage) return `${url}${ampersandOrQuestion}page=${nextPage}`;
+  else if (cursor) return `${url}${ampersandOrQuestion}cursor=${cursor}`;
   return url;
 }
 
@@ -509,10 +562,10 @@ function updateNextPage(endpoint: EndpointInterface, cursor?: string) {
 
 async function fetchEndpoint(url: string, type: string, hubKey?: string, nextPage?: number, cursor?: string) {
   if (type == 'searchcaster') {
-    const response = await fetch(getUrl(url, nextPage));
+    const response = await fetch(getUrl(url, true, nextPage));
     return await response.json();
   } else if (type == 'merkleUser') {
-    const response = await fetch(getUrl(url, undefined, cursor), {
+    const response = await fetch(getUrl(url, true, undefined, cursor), {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${hubKey}`
@@ -520,12 +573,21 @@ async function fetchEndpoint(url: string, type: string, hubKey?: string, nextPag
     });
     return await response.json();
   } else if (type == 'merkleNotification') {
-    const response = await fetch(getUrl(url, undefined, cursor), {
+    const response = await fetch(getUrl(url, true, undefined, cursor), {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${hubKey}`
       },
     });
+    return await response.json();
+  } else if (type == 'perl') {
+    const response = await fetch(getUrl(url, false, nextPage), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${hubKey}`
+      },
+    });
+
     return await response.json();
   }
 }
@@ -574,6 +636,16 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
             endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
           };
         }
+      }
+      else if (endpoint.type == 'perl' && endpoint.nextPage) {
+        const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, undefined, endpoint.nextPage);
+        const data: PerlApiResponse = await fetchFunction;
+
+        console.log(JSON.stringify(data, null, 2));
+        return {
+          casts: transformCasts(data, endpoint.type),
+          endpoints: updateNextPage(endpoint)
+        };
       }
     })
   );
