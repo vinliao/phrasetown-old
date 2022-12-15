@@ -599,11 +599,6 @@ export function getUpstashName() {
       upstashColumnName: "prod_phrasetown_home",
       upstashEndpointName: "prod_phrasetown_home_endpoints"
     };
-  } else if (import.meta.env.PROD && import.meta.env.BASE_URL.startsWith('dev')) {
-    return {
-      upstashColumnName: "dev_phrasetown_home",
-      upstashEndpointName: "dev_phrasetown_home_endpoints"
-    };
   } else {
     return {
       upstashColumnName: "local_phrasetown_home",
