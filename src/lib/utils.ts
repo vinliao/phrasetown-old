@@ -561,24 +561,20 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
       else if (endpoint.type == 'merkleNotification') {
         const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, hubKey, undefined, endpoint.cursor);
         const data: MerkleNotificationApiResponse = await fetchFunction;
-        let rawCasts: MerkleNotificationCast[] = [];
 
-        // todo: use filter()
         if ("notifications" in data.result) {
-          const notifications = data.result.notifications;
-          for (const key in notifications) {
-            if (notifications[key].type == 'cast-reply' || notifications[key].type == 'cast-mention') {
-              rawCasts.push(notifications[key].content.cast);
+          const casts = data.result.notifications.map(notification => {
+            if (notification.type == 'cast-reply' || notification.type == 'cast-mention') {
+              return notification.content.cast;
             }
-          }
+          });
+
+          return {
+            casts: transformCasts(casts, endpoint.type, endpoint.username),
+            endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
+          };
         }
-
-        return {
-          casts: transformCasts(rawCasts, endpoint.type, endpoint.username),
-          endpoints: ('next' in data) ? updateNextPage(endpoint, data.next.cursor) : endpoint
-        };
       }
-
     })
   );
 
