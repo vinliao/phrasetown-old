@@ -309,18 +309,18 @@ function getUnixTimeMinusXHours(x: number): number {
 function getImageLink(openGraph: MerkleOpenGraph): string | undefined {
   if (typeof openGraph.url === 'string' && openGraph.url !== '') {
     if (/\.(jpg|png|gif)$/.test(openGraph.url)) {
-      return openGraph.url;
+      return addCdnLinkToImage(openGraph.url);
     }
   } else if (typeof openGraph.image === 'string' && openGraph.image !== '') {
     if (/\.(jpg|png|gif)$/.test(openGraph.image)) {
-      return openGraph.image;
+      return addCdnLinkToImage(openGraph.image);
     }
   }
 }
 
 /**
  * matches farcaster://casts/<hash>/<hash>
- * @returns if text contains that regex, turn it into a phrasetown cast link
+ * @returns if text contains that regex, turn it into a phrasetown rast link
  */
 function replaceFarcasterProtocolString(text: string): string {
   const regex = /farcaster:\/\/casts\/([a-zA-Z0-9]+)\/[a-zA-Z0-9]+/;
@@ -346,6 +346,15 @@ export function linkify(text: string): string {
   };
 
   return sanitizeHtml(linkifyHtml(replaceFarcasterProtocolString(text), linkifyOption));
+}
+
+/**
+ * @param imageUrl
+ * @returns `${cdnUrl}/${imageUrl}`
+ */
+function addCdnLinkToImage(imageUrl: string): string {
+  return `${import.meta.env.VITE_CLOUDINARY_URL}/${imageUrl}`;
+  return imageUrl; // return this on image cdn emergency
 }
 
 /**
@@ -398,7 +407,7 @@ function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface
     author: {
       username: cast.author.username,
       displayName: cast.author.displayName,
-      pfp: cast.author.pfp.url,
+      pfp: addCdnLinkToImage(cast.author.pfp.url),
       fid: cast.author.fid
     },
     parent,
@@ -425,16 +434,18 @@ function transformSearchcasterCast(cast: SearchcasterCast): CastInterface {
     ? { hash: cast.body.data.replyParentMerkleRoot, username: cast.meta.replyParentUsername.username }
     : undefined;
 
+  const image = cast.body.data.image ? addCdnLinkToImage(cast.body.data.image) : undefined;
+
   return {
     author: {
       username: cast.body.username,
-      pfp: cast.meta.avatar,
+      pfp: addCdnLinkToImage(cast.meta.avatar),
       displayName: cast.meta.displayName,
     },
     parent,
     recasted: undefined,
     text: linkify(cast.body.data.text),
-    image: cast.body.data.image,
+    image,
     timestamp: cast.body.publishedAt,
     likes: cast.meta.reactions.count,
     recasts: cast.meta.recasts.count,
