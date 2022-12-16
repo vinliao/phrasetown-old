@@ -1,5 +1,5 @@
 import { error, json } from '@sveltejs/kit';
-import type { PageServerLoad } from '../../../.svelte-kit/types/src/routes/[slug]/$types';
+import type { PageServerLoad } from '../../../.svelte-kit/types/src/routes/[fname]/$types';
 import type { Data as MerkleUserRoot } from '$lib/types/merkleUser';
 import { transformCasts } from '$lib/utils';
 import type { CastInterface } from '$lib/types';
@@ -18,8 +18,8 @@ async function getUser(fname: string): Promise<User> {
 }
 
 export const load: PageServerLoad = async ({ params }) => {
-  if (params.slug.startsWith('@') && typeof params.slug === 'string') {
-    const fname = params.slug.slice(1);
+  if (params.fname.startsWith('@') && typeof params.fname === 'string') {
+    const fname = params.fname.slice(1);
     const user = await getUser(fname);
 
     const hubKey = import.meta.env.VITE_HUB_KEY;
