@@ -7,6 +7,10 @@
 				>home</a
 			>.</span
 		>
-		<img src="https://i.imgur.com/lXSWGjR.png" alt="error message" class="h-40 w-40" />
+		<img
+			src="https://dxpoz1qtq.mo.cloudinary.net/pt/https://i.imgur.com/lXSWGjR.png"
+			alt="error message"
+			class="h-40 w-40"
+		/>
 	</div>
 </div>
