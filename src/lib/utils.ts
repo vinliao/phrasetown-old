@@ -319,6 +319,15 @@ function getImageLink(openGraph: MerkleOpenGraph): string | undefined {
 }
 
 /**
+ * matches farcaster://casts/<hash>/<hash>
+ * @returns if text contains that regex, turn it into a phrasetown cast link
+ */
+function replaceFarcasterProtocolString(text: string): string {
+  const regex = /farcaster:\/\/casts\/([a-zA-Z0-9]+)\/[a-zA-Z0-9]+/;
+  return text.replace(regex, 'phrasetown.com/cast/$1');
+}
+
+/**
  * takes raw user cast, replaces all `@name` and links
  * with anchor tags, then sanitize it
  * 
@@ -336,7 +345,7 @@ export function linkify(text: string): string {
     },
   };
 
-  return sanitizeHtml(linkifyHtml(text, linkifyOption));
+  return sanitizeHtml(linkifyHtml(replaceFarcasterProtocolString(text), linkifyOption));
 }
 
 /**
