@@ -189,8 +189,8 @@ function getAllEndpoints(): EndpointInterface[] {
     ...getNewEndpoints(),
     ...getNotificationEndpoints(),
     ...getFarlistEndpoints(),
-    ...getSearchcasterEndpoints(),
     ...getPerlEndpoints(),
+    ...getSearchcasterEndpoints(),
     ...getHomeEndpoints(import.meta.env.PROD)
   ];
 }
