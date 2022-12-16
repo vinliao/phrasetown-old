@@ -8,9 +8,9 @@
 	import IntersectionObserver from 'svelte-intersection-observer';
 
 	export let data: { casts: CastInterface[]; endpoints: EndpointInterface[] };
-	let casts = data.casts;
-	let endpoints = data.endpoints;
-	const name = data.endpoints[0].name;
+	$: casts = data.casts;
+	$: endpoints = data.endpoints;
+	$: name = data.endpoints[0].name;
 
 	let fetchLoading = false;
 	async function localFetchMore() {
