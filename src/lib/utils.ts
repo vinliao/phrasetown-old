@@ -729,4 +729,18 @@ if (import.meta.vitest) {
   it('returns the correct upstash database name', () => {
     expect(getUpstashName().upstashColumnName).toBeTypeOf('string');
   });
+
+  /**
+   * todo, needs to be tested:
+   * 
+   * getAllEndpoints: make sure it's returning all endpoints, 
+   * with correct type 
+   * 
+   * fetchEndpoints: make sure it fetches well, processes the data correctly
+   * 
+   * fetchMore: take endpoints, return feed
+   * 
+   * getUrl: make sure it returns the correct url, can be flaky at times
+   * 
+   */
 }
