@@ -2,7 +2,7 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { orderBy, shuffle } from 'lodash-es';
+import { orderBy } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { PerlCastTypeOne, PerlCastTypeTwo } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
@@ -47,7 +47,7 @@ function getPerlEndpoints(): EndpointInterface[] {
   return [
     {
       id: idOf('Perl'),
-      name: 'Perl',
+      name: 'Random Perls (Perl.xyz)',
       url: 'https://api.perl.xyz/shuffled-perls',
       type: 'perl',
       nextPage: 1
@@ -306,7 +306,7 @@ function getUnixTimeMinusXHours(x: number): number {
  * @param openGraph openGraph object from Merkle's or Perl's API
  * @returns link to image
  */
-function getImageLink(openGraph: PerlOpenGraph | MerkleOpenGraph): string | undefined {
+function getImageLink(openGraph: MerkleOpenGraph): string | undefined {
   if (typeof openGraph.url === 'string' && openGraph.url !== '') {
     if (/\.(jpg|png|gif)$/.test(openGraph.url)) {
       return openGraph.url;
@@ -668,7 +668,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
         const data = await fetchFunction;
 
         return {
-          casts: shuffle(transformCasts(data, endpoint.type).filter(cast => cast !== undefined)),
+          casts: transformCasts(data, endpoint.type).filter(cast => cast !== undefined),
           endpoints: updateNextPage(endpoint)
         };
       }
