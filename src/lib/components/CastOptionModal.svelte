@@ -23,9 +23,11 @@
 	$: bookmarkClass = bookmark ? 'visible' : 'invisible';
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
 	class="absolute z-10 {padRightClass} top-6 flex flex-col bg-neutral-800 p-4 space-y-2 rounded-2xl text-neutral-400"
 	transition:fly={{ y: -10, duration: 150 }}
+	on:click|preventDefault
 >
 	<button
 		class="flex space-x-2 items-center"
