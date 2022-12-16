@@ -511,67 +511,6 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
   // todo: handle error
 }
 
-/**
- * todo
- * 
- * @param data 
- * @param type 
- * @param recaster 
- * @returns 
- */
-export function processCast(cast: any, recaster?: string): CastInterface | undefined {
-  try {
-    let parent;
-
-    // type error here
-    if (cast.parentAuthor && cast.parentHash) {
-      parent = {
-        username: cast.parentAuthor.username,
-        hash: cast.parentHash
-      };
-    }
-
-    // note: mention cast has no "recast" field
-    let recasted;
-    if ('recast' in cast && typeof recaster === 'string') {
-      recasted = {
-        username: recaster,
-      };
-    }
-
-    let image;
-    if (cast.attachments && cast.attachments.openGraph.length > 0) {
-      // if there's image attached to cast
-      image = getImageLink(cast.attachments.openGraph[0]);
-    }
-
-    return {
-      author: {
-        username: cast.author.username,
-        displayName: cast.author.displayName,
-        pfp: cast.author.pfp.url,
-        fid: cast.author.fid
-      },
-      parent,
-      recasted,
-      hash: cast.hash,
-      text: linkify(cast.text),
-      image,
-      timestamp: cast.timestamp,
-      likes: cast.reactions.count,
-      replies: cast.replies.count,
-      recasts: cast.recasts.count,
-    };
-
-
-  } catch (e) {
-    // if type wrong, don't push the cast, and don't brick the entire app
-    console.error(e);
-  }
-
-  // todo: handle error
-}
-
 function getUrl(url: string, withAmpersand = true, nextPage?: number, cursor?: string) {
   const ampersandOrQuestion = withAmpersand ? '&' : '?';
   if (nextPage) return `${url}${ampersandOrQuestion}page=${nextPage}`;

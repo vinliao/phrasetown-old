@@ -1,14 +1,14 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { processCast } from '$lib/utils';
-import type { Root } from '$lib/types/merkleAllReply';
+import { transformCasts } from '$lib/utils';
+import type { Root, Cast } from '$lib/types/merkleAllReply';
 import type { CastInterface } from '$lib/types';
 
 /**
  * @param hash hash of cast
  * @returns the thread hash (root of thread), returns itself if it's the root
  */
-async function getThreadHash(hash: string) {
+async function getThreadHash(hash: string): Promise<string> {
   const response = await fetch(`https://api.farcaster.xyz/v2/cast?hash=${hash}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -36,6 +36,9 @@ async function getReplies(hash: string): Promise<Root> {
 /**
  * given a hash, get the chains of cast from it to the root (thread)
  * 
+ * given a hash and a list of replies, find the ancestor chain: an array
+ * array of casts where the previous index is the parent
+ * 
  * bug: the /v2/all-casts-in-thread only returns a certain amount of cast
  * (maybe a hundred), and if the casts aren't included in the one hundred
  * cast returned by it, the getAncestors return an empty array, which
@@ -56,16 +59,11 @@ function getAncestors(hash: string, data: Root): CastInterface[] {
     currentHash = currentCast.parentHash;
   }
 
-  // this is not elegant, abstract this
-  let processedCasts: CastInterface[] = [];
-  ancestorChain.forEach(cast => {
-    let processedCast = processCast(cast, 'merkleUser');
-    if (processedCast) {
-      processedCast.parent = undefined;
-      processedCasts.push(processedCast);
-    }
-  });
-  return processedCasts;
+  return transformCasts(ancestorChain.map(cast => removeParent(cast)), 'merkleUser');
+}
+
+function removeParent(cast: Cast): Cast {
+  return { ...cast, parentAuthor: undefined, parentHash: undefined };
 }
 
 /**
@@ -75,21 +73,15 @@ function getAncestors(hash: string, data: Root): CastInterface[] {
  * @param data the return of getReplies()
  * @returns an array of cast, the children
  */
-function getChildren(hash: string, data: Root) {
-  const casts = data.result.casts.filter(cast => cast.parentHash === hash);
-  let processedCasts: CastInterface[] = [];
-  casts.forEach(cast => {
-    processedCasts.push(processCast(cast, 'merkleUser')!);
-
-  });
-  return processedCasts;
+function getChildren(hash: string, data: Root): CastInterface[] {
+  const directChildrenCasts = data.result.casts.filter(cast => cast.parentHash === hash);
+  return transformCasts(directChildrenCasts, 'merkleUser');
 }
 
 export const load: PageServerLoad = async ({ params }) => {
   if (params.hash.startsWith('0x') && typeof params.hash === 'string' && params.hash.length == 66) {
     const hash = params.hash;
-    const threadHash = await getThreadHash(hash);
-    const replies = await getReplies(threadHash);
+    const replies = await getReplies(await getThreadHash(hash));
     return { ancestors: getAncestors(hash, replies), children: getChildren(hash, replies) };
   }
 
