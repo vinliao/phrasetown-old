@@ -13,7 +13,6 @@ async function getUser(fname: string): Promise<User> {
     },
   });
   const data: Data = await response.json();
-  console.log(data);
   return data.result.user;
 }
 

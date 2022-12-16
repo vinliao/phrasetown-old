@@ -3,9 +3,7 @@ import type { RequestHandler } from '../../../../.svelte-kit/types/src/routes/ap
 
 // get request, use local hubkey instead
 export const GET: RequestHandler = async ({ url }) => {
-  console.log(url);
   const username = url.searchParams.get('username');
-  console.log(username);
   const response = await fetch(`https://api.farcaster.xyz/v2/user-by-username?username=${username}`, {
     headers: {
       'Content-Type': 'application/json',
