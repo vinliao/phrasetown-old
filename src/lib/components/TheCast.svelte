@@ -4,6 +4,7 @@
 	import ReplyRecastLike from '$lib/components/ReplyRecastLike.svelte';
 	import { getTimeago } from '$lib/utils';
 	import { fade } from 'svelte/transition';
+	import CastOptionModal from '$lib/components/CastOptionModal.svelte';
 	export let cast: CastInterface;
 
 	// texbox reply
@@ -25,6 +26,11 @@
 	import IntersectionObserver from 'svelte-intersection-observer';
 	let element: any;
 	let intersecting: any;
+
+	let optionModal = false;
+	function toggleOptionModal() {
+		optionModal = !optionModal;
+	}
 </script>
 
 <div class="relative px-4 pb-4 bg-neutral-900">
@@ -32,6 +38,14 @@
 </div>
 <IntersectionObserver bind:intersecting {element} once>
 	<div class="bg-neutral-900 p-4 pt-0 flex flex-col min-w-0 relative" bind:this={element}>
+		<!-- has to be padded right because it's relative the entire cast 
+      while in the Cast.svelte, it's relative to the pfp element,
+      which is padded -->
+
+		{#if optionModal}
+			<CastOptionModal hash={cast.hash} {toggleOptionModal} padRight />
+		{/if}
+
 		<div class="flex items-center mb-3 space-x-4">
 			<div class="h-12 w-12 flex-none {pfpLineDownClass}">
 				{#if intersecting}
@@ -55,6 +69,19 @@
 					>@{cast.author.username}</a
 				>
 			</div>
+			<div class="flex-1" />
+			<button on:click|preventDefault={toggleOptionModal} class="self-start">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 20 20"
+					fill="currentColor"
+					class="w-5 h-5  text-neutral-500 hover:text-neutral-200 transition"
+				>
+					<path
+						d="M3 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM15.5 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+					/>
+				</svg>
+			</button>
 		</div>
 
 		<div class="min-w-0 w-full">

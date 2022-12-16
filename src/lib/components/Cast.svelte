@@ -91,22 +91,20 @@ the bug disappears when <a> is removed -->
 				{/if}
 
 				<!-- bug: layout shift when there's flex with class="flex-1" child -->
-				<div class="flex space-x-2">
-					<a class="font-bold hover:underline" href={`/@${cast.author.username}`}
+				<div class="flex space-x-2 text-neutral-400">
+					<a class="font-bold hover:underline text-neutral-200" href={`/@${cast.author.username}`}
 						>{cast.author.displayName}</a
 					>
-					<a class="hover:underline text-neutral-400" href={`/@${cast.author.username}`}
-						>@{cast.author.username}</a
-					>
-					<span class="text-neutral-400">·</span>
-					<span class="text-neutral-400">{getTimeago(cast.timestamp)}</span>
+					<a class="hover:underlin" href={`/@${cast.author.username}`}>@{cast.author.username}</a>
+					<span>·</span>
+					<span>{getTimeago(cast.timestamp)}</span>
 					<div class="flex-1" />
 					<button on:click|preventDefault={toggleOptionModal}>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 20 20"
 							fill="currentColor"
-							class="w-5 h-5 text-neutral-500 hover:text-neutral-200 transition"
+							class="w-5 h-5  text-neutral-500 hover:text-neutral-200 transition"
 						>
 							<path
 								d="M3 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM15.5 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"

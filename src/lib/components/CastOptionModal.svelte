@@ -1,17 +1,20 @@
 <script lang="ts">
-  import { showNotice } from '$lib/stores';
+	import { showNotice } from '$lib/stores';
 	import { fly } from 'svelte/transition';
 	export let hash: string;
+	export let padRight = false;
 	export let toggleOptionModal = () => {};
 
 	/**
 	 * todo: this component can be made of multiple components
 	 * each has its own callback (what to do on click)
-   * 
-   * imagine implementing a hundred of these buttons, wouldn't it
-   * make more sense to have a single function that generates those
-   * components rather than implementing it individually?
+	 *
+	 * imagine implementing a hundred of these buttons, wouldn't it
+	 * make more sense to have a single function that generates those
+	 * components rather than implementing it individually?
 	 */
+
+	$: padRightClass = padRight ? 'right-4' : 'right-0';
 
 	let linkCopied = false;
 	$: linkCopiedClass = linkCopied ? 'visible' : 'invisible';
@@ -21,7 +24,7 @@
 </script>
 
 <div
-	class="absolute z-10 right-0 top-6 flex flex-col bg-neutral-800 p-4 space-y-2 rounded-2xl text-neutral-400"
+	class="absolute z-10 {padRightClass} top-6 flex flex-col bg-neutral-800 p-4 space-y-2 rounded-2xl text-neutral-400"
 	transition:fly={{ y: -10, duration: 150 }}
 >
 	<button
@@ -52,7 +55,7 @@
 	<button
 		class="flex space-x-2 items-center"
 		on:click|preventDefault={async () => {
-      showNotice.set('Bookmark feature coming soon')
+			showNotice.set('Bookmark feature coming soon');
 			bookmark = true;
 			await new Promise((r) => setTimeout(r, 1000));
 			bookmark = false;
