@@ -2,12 +2,11 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { orderBy } from 'lodash-es';
+import { orderBy, shuffle } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
-import type { OpenGraph as PerlOpenGraph, } from '$lib/types/perl';
+import type { PerlCastTypeOne, PerlCastTypeTwo } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
 import type { Data as MerkleNotificationApiResponse } from '$lib/types/merkleNotification';
-import type { Root as PerlApiResponse, Root2 as PerlCast } from '$lib/types/perl';
 import * as timeago from 'timeago.js';
 
 /**
@@ -191,7 +190,7 @@ function getAllEndpoints(): EndpointInterface[] {
     ...getNotificationEndpoints(),
     ...getFarlistEndpoints(),
     ...getSearchcasterEndpoints(),
-    // ...getPerlEndpoints(),
+    ...getPerlEndpoints(),
     ...getHomeEndpoints(import.meta.env.PROD)
   ];
 }
@@ -435,33 +434,61 @@ function transformSearchcasterCast(cast: SearchcasterCast): CastInterface {
   };
 }
 
-// /**
-//  * 
-//  * @param cast cast from perl
-//  * @returns CastInterface
-//  */
-// function transformPerlCast(cast: PerlCast): CastInterface {
-//   const image = (cast.payload.attachments?.openGraph) ? getImageLink(cast.payload.attachments.openGraph[0]) : undefined;
 
-//   return {
-//     author: {
-//       username: cast.payload.author?.username,
-//       displayName: cast.payload.author?.displayName,
-//       pfp: cast.payload.author?.pfp.url,
-//       fid: cast.payload.author?.fid
-//     },
-//     parent: undefined,
-//     recasted: undefined,
-//     hash: cast.payload.merkleRoot,
-//     // text: linkify(cast.payload.text),
-//     text: cast.payload.text,
-//     image,
-//     timestamp: cast.payload.timestamp,
-//     likes: cast.payload.meta?.reactions.count,
-//     recasts: cast.payload.meta?.recasts.count,
-//     replies: cast.payload.meta?.numReplyChildren,
-//   };
-// }
+/**
+ * from the perl backend, there are two kinds of cast returned,
+ * each with their own types, needs to be transformed differently
+ * 
+ * @param cast cast from perl
+ * @returns CastInterface
+ */
+function transformPerlCast(anyCast: any): CastInterface | undefined {
+  if (anyCast.type == 'farcaster') {
+    if (anyCast.payload.hash) {
+      const cast = anyCast as PerlCastTypeOne;
+      const image = ("attachments" in cast.payload) ? getImageLink(cast.payload.attachments.openGraph[0]) : undefined;
+
+      return {
+        author: {
+          username: cast.payload.author?.username,
+          displayName: cast.payload.author?.displayName,
+          pfp: cast.payload.author?.pfp.url,
+          fid: cast.payload.author?.fid
+        },
+        parent: undefined,
+        recasted: undefined,
+        hash: cast.payload.hash,
+        text: linkify(cast.payload.text),
+        image,
+        timestamp: cast.payload.timestamp,
+        likes: cast.payload.reactions.count,
+        recasts: cast.payload.recasts.count,
+        replies: cast.payload.replies.count
+      };
+    } else if (anyCast.payload.merkleRoot) {
+      const cast = anyCast as PerlCastTypeTwo;
+      const image = (cast.payload.attachments.openGraph) ? getImageLink(cast.payload.attachments.openGraph[0]) : undefined;
+
+      return {
+        author: {
+          username: cast.payload.body.username,
+          displayName: cast.payload.meta.displayName,
+          pfp: cast.payload.meta.avatar,
+          fid: cast.payload.body.fid
+        },
+        parent: undefined,
+        recasted: undefined,
+        hash: cast.payload.merkleRoot,
+        text: linkify(cast.payload.body.data.text),
+        image,
+        timestamp: parseInt(cast.timestamp),
+        likes: cast.payload.meta.reactions.count,
+        recasts: cast.payload.meta.recasts.count,
+        replies: cast.payload.meta.numReplyChildren
+      };
+    }
+  }
+}
 
 /**
  * todo
@@ -477,10 +504,9 @@ export function transformCasts(casts: any, type: string, recaster?: string): Cas
     return casts.map((cast: MerkleCast) => transformMerkleCast(cast, recaster));
   } else if (type == 'searchcaster') {
     return casts.map((cast: SearchcasterCast) => transformSearchcasterCast(cast));
+  } else if (type == 'perl') {
+    return casts.map((cast: PerlCastTypeOne | PerlCastTypeOne) => transformPerlCast(cast));
   }
-  // else if (type == 'perl') {
-  //   return casts.map((cast: PerlCast) => transformPerlCast(cast));
-  // }
 
   // todo: handle error
 }
@@ -639,11 +665,10 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
       }
       else if (endpoint.type == 'perl' && endpoint.nextPage) {
         const fetchFunction = fetchEndpoint(endpoint.url, endpoint.type, undefined, endpoint.nextPage);
-        const data: PerlApiResponse = await fetchFunction;
+        const data = await fetchFunction;
 
-        console.log(JSON.stringify(data, null, 2));
         return {
-          casts: transformCasts(data, endpoint.type),
+          casts: shuffle(transformCasts(data, endpoint.type).filter(cast => cast !== undefined)),
           endpoints: updateNextPage(endpoint)
         };
       }
