@@ -23,8 +23,14 @@
 		: '';
 
 	import IntersectionObserver from 'svelte-intersection-observer';
+	import CastOptionModal from './CastOptionModal.svelte';
 	let element: any;
 	let intersecting: any;
+
+	let optionModal = false;
+	function toggleOptionModal() {
+		optionModal = !optionModal;
+	}
 </script>
 
 <!-- this has a left pad layout shift, but not when "recasted by" text is present
@@ -78,14 +84,36 @@ the bug disappears when <a> is removed -->
 				{/if}
 			</div>
 
-			<div class="min-w-0 w-full">
-				<a class="font-bold hover:underline" href={`/@${cast.author.username}`}
-					>{cast.author.displayName}</a
-				>
-				<a class="hover:underline text-neutral-400" href={`/@${cast.author.username}`}
-					>@{cast.author.username}</a
-				>
-				<span class="text-neutral-400">· {getTimeago(cast.timestamp)}</span>
+			<!-- todo: username shrink to ellipsis when there's no room left (nowrap) -->
+			<div class="min-w-0 w-full relative">
+				{#if optionModal}
+					<CastOptionModal hash={cast.hash} {toggleOptionModal} />
+				{/if}
+
+				<!-- bug: layout shift when there's flex with class="flex-1" child -->
+				<div class="flex space-x-2">
+					<a class="font-bold hover:underline" href={`/@${cast.author.username}`}
+						>{cast.author.displayName}</a
+					>
+					<a class="hover:underline text-neutral-400" href={`/@${cast.author.username}`}
+						>@{cast.author.username}</a
+					>
+					<span class="text-neutral-400">·</span>
+					<span class="text-neutral-400">{getTimeago(cast.timestamp)}</span>
+					<div class="flex-1" />
+					<button on:click|preventDefault={toggleOptionModal}>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							class="w-5 h-5 text-neutral-500 hover:text-neutral-200 transition"
+						>
+							<path
+								d="M3 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM15.5 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+							/>
+						</svg>
+					</button>
+				</div>
 				{#if cast.parent}
 					<p class="text-neutral-400">
 						Replying to <a href={`/@${cast.parent.username}`}>@{cast.parent.username}</a>
