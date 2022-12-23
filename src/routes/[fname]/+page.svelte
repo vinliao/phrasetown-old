@@ -4,13 +4,11 @@
 	import Cast from '$lib/components/Cast.svelte';
 	import type { User } from '$lib/types/merkleUserByUsername';
 	import { linkify } from '$lib/utils';
-	import { usernameWritable, userHubKeyWritable } from '$lib/stores';
 
 	export let data: { user: User; topLevelCasts: CastInterface[]; replyCasts: CastInterface[] };
 	$: user = data.user;
 	$: topLevelCasts = data.topLevelCasts;
 	$: replyCasts = data.replyCasts;
-	let mentions: CastInterface[] = [];
 
 	let currentDisplayIndex = 0;
 
@@ -24,22 +22,6 @@
 
 	function displayMentions() {
 		currentDisplayIndex = 2;
-	}
-
-	$: isSelf = user.username == $usernameWritable;
-
-	$: if ($userHubKeyWritable && isSelf) {
-		(async () => {
-			const response = await fetch(`/api/fetch-mentions`, {
-				method: 'PUT',
-				body: JSON.stringify({
-					userHubKey: $userHubKeyWritable
-				})
-			});
-			const data = await response.json();
-			mentions = data.casts;
-			// endpoints = data.endpoints;
-		})();
 	}
 </script>
 
@@ -66,29 +48,11 @@
 				<span class="text-neutral-500">·</span>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<span class="text-neutral-500" on:click={displayWithReply}>Reply casts</span>
-				{#if isSelf}
-					<span class="text-neutral-500">·</span>
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<span class="text-neutral-500" on:click={displayMentions}>Mentions</span>
-				{/if}
 			{:else if currentDisplayIndex == 1}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<span class="text-neutral-500" on:click={displayTopLevelCasts}>Casts</span>
 				<span class="text-neutral-500">·</span>
 				<span>Reply casts</span>
-				{#if isSelf}
-					<span class="text-neutral-500">·</span>
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<span class="text-neutral-500" on:click={displayMentions}>Mentions</span>
-				{/if}
-			{:else if currentDisplayIndex == 2}
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span class="text-neutral-500" on:click={displayTopLevelCasts}>Casts</span>
-				<span class="text-neutral-500">·</span>
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span class="text-neutral-500" on:click={displayWithReply}>Reply casts</span>
-				<span class="text-neutral-500">·</span>
-				<span>Mentions</span>
 			{/if}
 		</div>
 	</div>
@@ -104,12 +68,6 @@
 	{:else if currentDisplayIndex == 1}
 		<div in:fade={{ duration: 200 }}>
 			{#each replyCasts as cast}
-				<Cast {cast} />
-			{/each}
-		</div>
-	{:else if currentDisplayIndex == 2 && mentions}
-		<div in:fade={{ duration: 200 }}>
-			{#each mentions as cast}
 				<Cast {cast} />
 			{/each}
 		</div>
