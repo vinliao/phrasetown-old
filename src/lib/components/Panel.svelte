@@ -2,11 +2,7 @@
 	import { showNoticeError, userHubKeyWritable } from '$lib/stores';
 	import autosize from 'autosize';
 	import { fly, fade } from 'svelte/transition';
-	import {
-		showNotice,
-		usernameWritable,
-		programmaticallyRefreshColumn
-	} from '$lib/stores';
+	import { showNotice, usernameWritable, programmaticallyRefreshColumn } from '$lib/stores';
 
 	let castInput = '';
 	let disableCast = false;
@@ -131,6 +127,9 @@
 					</svg>
 				</button>
 				<div class="flex-1" />
+				{#if castInput.length > 300}
+					<span class="text-sm text-neutral-400 mr-3">{castInput.length}/320</span>
+				{/if}
 				{#if !disableCast}
 					<button
 						class="bg-neutral-50 text-neutral-800 hover:bg-neutral-800 hover:text-neutral-50 border border-neutral-50 transition px-3 py-1 rounded-lg font-mono focus:outline-none text-base"
@@ -138,7 +137,7 @@
 					>
 				{:else}
 					<button
-						class="bg-neutral-700 text-neutral-400  px-3 py-1 rounded-lg font-mono focus:outline-none text-base"
+						class="bg-neutral-700 text-neutral-400 border border-neutral-700 px-3 py-1 rounded-lg font-mono focus:outline-none text-base"
 						in:fade={{ duration: 200 }}>Cast</button
 					>
 				{/if}

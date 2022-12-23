@@ -98,6 +98,9 @@
 					</svg>
 				</button>
 				<div class="flex-1" />
+				{#if replyInput.length > 300}
+					<span class="text-sm text-neutral-400 mr-3">{replyInput.length}/320</span>
+				{/if}
 
 				{#if !disableCast}
 					<button
