@@ -357,6 +357,10 @@ function addCdnLinkToImage(imageUrl: string): string {
   return imageUrl; // return this on image cdn emergency
 }
 
+function removeRecastStrings(casts: CastInterface[]): CastInterface[] {
+  return casts.filter(cast => !cast.text.startsWith('recast:farcaster://'));
+}
+
 /**
  * @param timestamp unix timestamp
  * @returns text like "4w, 3h, 11mo"
@@ -637,7 +641,7 @@ export async function fetchEndpoints(endpoints: EndpointInterface[], userHubKey?
   const casts = data.map(feed => feed?.casts).flat(1);
 
   return {
-    casts: sortCasts(removeDuplicate(removeUndefined(casts))),
+    casts: sortCasts(removeDuplicate(removeRecastStrings(removeUndefined(casts)))),
     endpoints: removeUndefined(data.map(feed => feed?.endpoints))
   };
 }
