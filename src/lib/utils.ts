@@ -2,7 +2,7 @@ import type { CastInterface, EndpointInterface } from '$lib/types';
 import linkifyHtml from 'linkify-html';
 import "linkify-plugin-mention";
 import sanitizeHtml from 'sanitize-html';
-import { orderBy } from 'lodash-es';
+import { orderBy, shuffle } from 'lodash-es';
 import type { Cast as SearchcasterCast, Root as SearchcasterApiResponse } from '$lib/types/searchcasterCasts';
 import type { PerlCastTypeOne, PerlCastTypeTwo } from '$lib/types/perl';
 import type { OpenGraph as MerkleOpenGraph, Cast as MerkleCast, Data as MerkleApiResponse } from '$lib/types/merkleUser';
@@ -384,7 +384,7 @@ export function getTimeago(timestamp: number): string {
   return timeago.format(timestamp, 'en-short').replace(' ago', '');
 }
 
-function removeDuplicate(casts: CastInterface[]): CastInterface[] {
+export function removeDuplicate(casts: CastInterface[]): CastInterface[] {
   return [...new Set(casts)];
 }
 
@@ -679,7 +679,7 @@ export async function fetchMore(casts: CastInterface[], endpoints: EndpointInter
   const data = await response.json();
   const newCasts: CastInterface[] = data.casts;
   if (newCasts) {
-    return { casts: [...new Set([...casts, ...newCasts])], endpoints: data.endpoints };
+    return { casts: removeDuplicate(([...casts, ...newCasts])), endpoints: data.endpoints };
   }
 }
 
