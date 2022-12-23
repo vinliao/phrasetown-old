@@ -26,7 +26,7 @@
 		currentDisplayIndex = 2;
 	}
 
-	$: isSelf = data.user.username == $usernameWritable;
+	$: isSelf = user.username == $usernameWritable;
 
 	$: if ($userHubKeyWritable && isSelf) {
 		(async () => {
