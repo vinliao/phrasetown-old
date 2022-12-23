@@ -76,7 +76,7 @@
 				use:autosize
 				autofocus
 				rows="2"
-				placeholder="Your reply..."
+				placeholder="Your reply... (paste imgur link to add image)."
 				class="w-full focus:outline-none placeholder:text-neutral-500 bg-neutral-800 text-lg mb-3"
 				on:keydown={(e) => {
 					if (e.key == 'Enter' && e.ctrlKey) {

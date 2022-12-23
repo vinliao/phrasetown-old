@@ -105,7 +105,7 @@
 				use:autosize
 				autofocus
 				rows="3"
-				placeholder="It is time to farcast. (Add image by pasting an imgur link.)"
+				placeholder="Start casting. Paste imgur link to add image."
 				class="mb-1 w-full bg-neutral-800 focus:outline-none text-lg placeholder:text-neutral-500 font-sans font-semibold"
 				on:keydown={(e) => {
 					if (e.key == 'Enter' && e.ctrlKey) {
