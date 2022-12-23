@@ -50,7 +50,6 @@
 	<a href="/feed/GK-rQ3w0s41xcTeRwVXgw" class=" text-neutral-500 hover:text-neutral-200 transition ">New</a>
 
 	{#if $userHubKeyWritable}
-		<a href="/mentions" class=" text-neutral-500 hover:text-neutral-200 transition ">Mentions</a>
 		<a href={`/@${$usernameWritable}`} class=" text-neutral-500 hover:text-neutral-200 transition "
 			>@{$usernameWritable}</a
 		>
@@ -72,7 +71,6 @@
 			</svg>
 		</button>
 	{:else}
-		<span class=" text-neutral-500 ">Mentions</span>
 		<a
 			href="https://connect.phrasetown.com"
 			class=" text-neutral-500 hover:text-neutral-200 transition ">Connect</a
