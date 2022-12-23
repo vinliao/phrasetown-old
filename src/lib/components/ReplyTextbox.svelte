@@ -35,11 +35,17 @@
 
 	async function fetchFid(username: string): Promise<number> {
 		const response = await fetch(`/api/get-user-by-username?username=${username}`);
-    const data: Root = await response.json()
-    return data.data.result.user.fid;
+		const data: Root = await response.json();
+		return data.data.result.user.fid;
 	}
 
 	let isSending = false;
+
+	$: {
+		if (replyInput.length > 320) isSending = true;
+		else isSending = false;
+	}
+
 	async function reply() {
 		if (!$userHubKeyWritable) {
 			showNoticeError.set('Error: wallet not connected!');

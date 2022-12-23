@@ -9,7 +9,7 @@
 		programmaticallyRefreshColumn
 	} from '$lib/stores';
 
-	let castInput: string;
+	let castInput = '';
 	let isSending = false;
 	let newCastTextbox = false;
 	$: castButtonDim = newCastTextbox
@@ -18,6 +18,11 @@
 
 	function toggleNewCastTextbox() {
 		newCastTextbox = !newCastTextbox;
+	}
+
+	$: {
+		if (castInput.length > 320) isSending = true;
+		else isSending = false;
 	}
 
 	async function cast() {
@@ -105,7 +110,7 @@
 				use:autosize
 				autofocus
 				rows="3"
-				placeholder="It is time to farcast."
+				placeholder="It is time to farcast. (Add image by pasting an imgur link.)"
 				class="mb-1 w-full bg-neutral-800 focus:outline-none text-lg placeholder:text-neutral-500 font-sans font-semibold"
 				on:keydown={(e) => {
 					if (e.key == 'Enter' && e.ctrlKey) {
