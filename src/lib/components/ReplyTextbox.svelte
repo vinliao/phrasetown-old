@@ -39,11 +39,11 @@
 		return data.data.result.user.fid;
 	}
 
-	let isSending = false;
+	let disableCast = false;
 
 	$: {
-		if (replyInput.length > 320) isSending = true;
-		else isSending = false;
+		if (replyInput.length > 320) disableCast = true;
+		else disableCast = false;
 	}
 
 	async function reply() {
@@ -52,10 +52,10 @@
 			toggleReplyTextbox();
 			replyInput = '';
 		} else {
-			isSending = true;
+			disableCast = true;
 			if (cast.author.fid) await sendCast(cast.author.fid);
 			else sendCast(await fetchFid(cast.author.username));
-			isSending = false;
+			disableCast = false;
 		}
 	}
 </script>
@@ -99,7 +99,7 @@
 				</button>
 				<div class="flex-1" />
 
-				{#if !isSending}
+				{#if !disableCast}
 					<button
 						class="bg-neutral-50 hover:bg-neutral-200 transition px-3 py-1.5 rounded-lg text-neutral-800 font-mono focus:outline-none"
 						on:click={reply}>Reply</button

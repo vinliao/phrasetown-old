@@ -5,12 +5,11 @@
 	import {
 		showNotice,
 		usernameWritable,
-		fidWritable,
 		programmaticallyRefreshColumn
 	} from '$lib/stores';
 
 	let castInput = '';
-	let isSending = false;
+	let disableCast = false;
 	let newCastTextbox = false;
 	$: castButtonDim = newCastTextbox
 		? 'bg-neutral-900 text-neutral-50'
@@ -21,12 +20,12 @@
 	}
 
 	$: {
-		if (castInput.length > 320) isSending = true;
-		else isSending = false;
+		if (castInput.length > 320) disableCast = true;
+		else disableCast = false;
 	}
 
 	async function cast() {
-		isSending = true;
+		disableCast = true;
 		const response = await fetch('/api/cast', {
 			method: 'POST',
 			body: JSON.stringify({ castText: castInput, userHubKey: $userHubKeyWritable })
@@ -36,12 +35,12 @@
 			showNotice.set('Cast sent successfully!');
 			toggleNewCastTextbox();
 			castInput = '';
-			isSending = false;
+			disableCast = false;
 
 			programmaticallyRefreshColumn.set(true);
 		} else {
 			showNoticeError.set('Oops, something is wrong... Try again?');
-			isSending = false;
+			disableCast = false;
 		}
 	}
 </script>
@@ -132,7 +131,7 @@
 					</svg>
 				</button>
 				<div class="flex-1" />
-				{#if !isSending}
+				{#if !disableCast}
 					<button
 						class="bg-neutral-50 text-neutral-800 hover:bg-neutral-800 hover:text-neutral-50 border border-neutral-50 transition px-3 py-1 rounded-lg font-mono focus:outline-none text-base"
 						on:click={cast}>Cast</button
