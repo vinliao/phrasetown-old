@@ -63,16 +63,13 @@ async function getCasts(hashes: string[]) {
 // end goal: return casts
 export const load: PageServerLoad = async ({ url }) => {
   const query = url.searchParams.get('q');
-  if (query) {
-    /**
-     * getEmbeddings return number[][] of index 1 (only one query)
-     * flatten so it can be inserted into queryPinecone
-     */
-    const searchHashes = await queryPinecone((await getEmbeddings([query])).flat(1));
-    return {
-      casts: transformCasts(await getCasts(searchHashes), 'merkleUser')
-    };
-  }
-  // if undefined, then display the big search bar
-  return undefined;
+  if (!query) return { casts: [] };
+  /**
+   * getEmbeddings return number[][] of index 1 (only one query)
+   * flatten so it can be inserted into queryPinecone
+   */
+  const searchHashes = await queryPinecone((await getEmbeddings([query])).flat(1));
+  return {
+    casts: transformCasts(await getCasts(searchHashes), 'merkleUser')
+  };
 };
