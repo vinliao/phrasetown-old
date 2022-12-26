@@ -24,6 +24,7 @@
 
 	import IntersectionObserver from 'svelte-intersection-observer';
 	import CastOptionModal from './CastOptionModal.svelte';
+	import { fidWritable } from '$lib/stores';
 	let element: any;
 	let intersecting: any;
 
@@ -87,7 +88,7 @@ the bug disappears when <a> is removed -->
 			<!-- todo: username shrink to ellipsis when there's no room left (nowrap) -->
 			<div class="min-w-0 w-full relative">
 				{#if optionModal}
-					<CastOptionModal hash={cast.hash} {toggleOptionModal} />
+					<CastOptionModal hash={cast.hash} {toggleOptionModal} isSelf={cast.author.fid == $fidWritable} />
 				{/if}
 
 				<!-- bug: layout shift when there's flex with class="flex-1" child -->

@@ -6,7 +6,7 @@ export const DELETE: RequestHandler = async ({ request }) => {
 
   if (!castHash) throw error(500, 'like cast must have parameter cast hash and author fid');
 
-  const response = await fetch(`https://api.farcaster.xyz/v2/recasts`, {
+  const response = await fetch(`https://api.farcaster.xyz/v2/casts`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',

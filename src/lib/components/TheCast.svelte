@@ -24,6 +24,7 @@
 		: '';
 
 	import IntersectionObserver from 'svelte-intersection-observer';
+	import { fidWritable } from '$lib/stores';
 	let element: any;
 	let intersecting: any;
 
@@ -43,7 +44,12 @@
       which is padded -->
 
 		{#if optionModal}
-			<CastOptionModal hash={cast.hash} {toggleOptionModal} padRight />
+			<CastOptionModal
+				hash={cast.hash}
+				{toggleOptionModal}
+				padRight
+				isSelf={cast.author.fid == $fidWritable}
+			/>
 		{/if}
 
 		<div class="flex items-center mb-3 space-x-4">
