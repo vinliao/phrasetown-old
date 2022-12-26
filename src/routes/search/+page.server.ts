@@ -1,5 +1,4 @@
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from '../../../../.svelte-kit/types/src/routes/api/search/$types';
+import type { PageServerLoad } from './$types';
 
 async function getEmbeddings(texts: string[]): Promise<number[][]> {
   const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -37,10 +36,16 @@ async function queryPinecone(vector: number[]) {
   return data.matches.map(embedding => embedding.id);
 }
 
-export const GET: RequestHandler = async ({ url }) => {
+
+
+export const load: PageServerLoad = async ({ url }) => {
   const query = url.searchParams.get('q');
+  console.log(query);
   if (query) {
-    return json({ data: await queryPinecone((await getEmbeddings([query])).flat(1)) });
+    return {
+      hashes: await queryPinecone((await getEmbeddings([query])).flat(1))
+    };
   }
-  return error(500, 'params ?q= must exist');
+  // if undefined, then display the big search bar
+  return undefined;
 };
