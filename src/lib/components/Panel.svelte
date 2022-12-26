@@ -49,9 +49,9 @@
 	<a href="/feed/GK-rQ3w0s41xcTeRwVXgw" class=" text-neutral-500 hover:text-neutral-200 transition "
 		>New</a
 	>
-	<a href="/search" class=" text-neutral-500 hover:text-neutral-200 transition "
+	<!-- <a href="/search" class=" text-neutral-500 hover:text-neutral-200 transition "
 		>Search</a
-	>
+	> -->
 
 	{#if $userHubKeyWritable}
 		<a href="/mentions" class=" text-neutral-500 hover:text-neutral-200 transition ">Mentions</a>
