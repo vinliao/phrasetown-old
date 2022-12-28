@@ -1,57 +1,21 @@
-import { getUpstashName } from "$lib/utils";
+import { shuffle } from 'lodash-es';
+import { getApiUrl } from '$lib/utils';
 import type { PageServerLoad } from './$types';
-import { decode, encode } from 'js-base64';
-import type { CastInterface, EndpointInterface } from "$lib/types";
-import { fetchEndpoints, getHomeEndpoints } from '$lib/utils';
-
-async function fetchFromUpstash(): (Promise<{ casts: CastInterface[], endpoints: EndpointInterface[]; } | undefined>) {
-  try {
-
-    const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
-    const upstashKey = import.meta.env.VITE_UPSTASH_KEY;
-    const { upstashColumnName } = getUpstashName();
-
-    const homeResponse = await fetch(`${upstashUrl}/get/${upstashColumnName}`, {
-      headers: {
-        Authorization: `Bearer ${upstashKey}`
-      },
-    });
-
-    const dataBase64 = await homeResponse.json();
-    const dataString = decode(dataBase64.result);
-    const data = JSON.parse(dataString);
-    return { casts: data.casts, endpoints: data.endpoints };
-  } catch (e) {
-    console.log(e);
-    return undefined;
-  }
-}
-
-async function saveToUpstash(data: { casts: CastInterface[], endpoints: EndpointInterface[]; }) {
-  const upstashUrl = import.meta.env.VITE_UPSTASH_URL;
-  const upstashKey = import.meta.env.VITE_UPSTASH_KEY;
-
-  const dataBase64 = encode(JSON.stringify(data));
-
-  const { upstashColumnName, upstashEndpointName } = getUpstashName();
-
-  await fetch(`${upstashUrl}/set/${upstashColumnName}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${upstashKey}`
-    },
-    body: dataBase64
-  });
-}
-
+/**
+ * get cached casts from redis
+ * 
+ * POST /v0/home-cache cache casts to redis and also returns the casts
+ */
 export const load: PageServerLoad = async ({ params }) => {
-  const data = await fetchFromUpstash();
-  if (data) return { casts: data.casts, endpoints: data.endpoints };
-  else {
-    console.log('have to fetch manually!');
-    const endpoints = getHomeEndpoints(import.meta.env.PROD);
-    const data = await fetchEndpoints(endpoints);
-    await saveToUpstash(data);
-    return { casts: data.casts, endpoints: data.endpoints };
+  const apiUrl = getApiUrl(import.meta.env.PROD);
+  try {
+    const response = await fetch(`${apiUrl}/v0/home-cache`);
+    return { casts: (await response.json()).casts };
+  } catch {
+    const response = await fetch(`${apiUrl}/v0/home-cache`, {
+      method: 'POST'
+    });
+    const casts = (await response.json()).casts;
+    return { casts: shuffle(casts).slice(0, 15) };
   }
 };

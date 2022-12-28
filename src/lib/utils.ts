@@ -687,6 +687,17 @@ export async function fetchMore(casts: CastInterface[], endpoints: EndpointInter
   }
 }
 
+/**
+ * todo: perhaps this should return a URL object instead?
+ * 
+ * @param isProd 
+ * @returns localhost or api.phrasetown.com
+ */
+export function getApiUrl(isProd: boolean): string {
+  if (isProd) return 'https://api.phrasetown.com';
+  return 'http://localhost:5000';
+}
+
 if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest;
   it('returns the correct upstash database name', () => {
