@@ -224,6 +224,7 @@ function getSearchcasterEndpoints(): EndpointInterface[] {
     { name: "?search=BTC&ETH", queries: ['bitcoin', 'btc', 'ethereum', 'eth+'] },
     { name: "?search=product", queries: ['product', 'startup'] },
     { name: "?search=nouns", queries: ['nouns'] },
+    { name: "?search=government", queries: ['government'] },
   ];
 
   return searchlist
