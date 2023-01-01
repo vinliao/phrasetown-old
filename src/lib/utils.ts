@@ -403,7 +403,7 @@ function sortCasts(casts: CastInterface[]): CastInterface[] {
  * @param recaster useful for "recasted by @handlename" text
  * @returns CastInterface
  */
-function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
+export function transformMerkleCast(cast: MerkleCast, recaster?: string): CastInterface {
   const parent = (cast.parentAuthor && cast.parentHash) ? { username: cast.parentAuthor.username, hash: cast.parentHash } : undefined;
   const recasted = ('recast' in cast && typeof recaster === 'string') ? { username: recaster } : undefined;
   const image = (cast.attachments && cast.attachments.openGraph.length > 0) ? getImageLink(cast.attachments.openGraph[0]) : undefined;
